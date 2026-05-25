@@ -1,22 +1,33 @@
-# Infrastructure_Hub_Server
+# infra-ops
 
-A centralized, Linux-based home lab ecosystem leveraging Ubuntu Server as the foundational infrastructure layer. This repository serves as the central hub for network security, self-hosted services, and high-availability systems.
+A centralized Linux-based infrastructure environment leveraging Ubuntu Server as the foundational platform for self-hosted services, network security, and operational infrastructure management.
 
 ## Core Architecture
-This lab is built on a mission-critical mindset, focusing on redundancy, security, and scalable infrastructure.
-* **Operating System:** Ubuntu Server (Hardened for stability and security).
-* **Network Topology:** Multi-node architecture ensuring zero-downtime DNS resolution.
-* **Service Deployment:** Containerized and modularized services for easy maintenance and rapid recovery.
+
+This environment is designed with a focus on reliability, redundancy, security, and scalable infrastructure practices.
+
+- Operating System: Ubuntu Server
+- Network Topology: Multi-node infrastructure supporting redundant DNS services
+- Service Deployment: Containerized and modularized services for maintainability and rapid recovery
+- Monitoring: Lightweight infrastructure monitoring and operational visibility tools
 
 ## Project Directory
-* **[Redundant_Network](Redundant_Network/README.md):** High-availability DNS architecture using Pi-hole and Unbound.
-* **[Pi-hole_Setup](Pi-hole_Setup/):** Configuration documentation for primary DNS filtering.
-* **[Unbound](Unbound/):** Recursive DNS resolution setup.
+
+- redundant-net : Redundant DNS infrastructure using Pi-hole and Unbound
+- pihole-setup : Primary DNS filtering configuration and deployment
+- unbound : Recursive DNS resolution configuration
+- samba-nas : Local network-attached storage configuration
 
 ## Technical Objectives
-* **Reliability:** Maintaining 99.9% uptime for core network services.
-* **Security:** Implementing proactive threat mitigation and secure access protocols.
-* **Standardization:** Documenting configurations to enable rapid, repeatable deployments in any environment.
 
----
-*Maintained by: Ted Phipps | Aspiring Data Center Technician*
+- Reliability: Maintaining stable and resilient core network services
+- Security: Implementing secure administrative and network practices
+- Standardization: Creating repeatable deployment and documentation workflows
+- Scalability: Building modular infrastructure capable of future expansion
+
+## Current Infrastructure
+
+- infra-hub : Primary infrastructure node
+- redundant-net : Secondary infrastructure and DNS redundancy node
+
+Maintained by Ted Phipps | Aspiring Data Center Technician
