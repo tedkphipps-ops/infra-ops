@@ -30,4 +30,4 @@ This environment is designed with a focus on reliability, redundancy, security, 
 - infra-hub : Primary infrastructure node
 - redundant-net : Secondary infrastructure and DNS redundancy node
 
-Maintained by Ted Phipps | Aspiring Data Center Technician
+Maintained by Ted Phipps | Infrastructure & Systems Operations
