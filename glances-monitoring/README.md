@@ -1,36 +1,93 @@
-# Server Monitoring with Glances
+# Glances Infrastructure Monitoring
 
-This directory contains the documentation and service configuration for deploying Glances across the infrastructure nodes. Glances provides a real-time, browser-based dashboard to monitor system health, CPU, memory, and network performance.
+## Overview
 
-## Monitored Nodes
-* blackhole: 192.168.1.226:61208
-* redundantnetwork: 192.168.1.238:61208
+This module documents the deployment and operational integration of Glances within the `infra-ops` infrastructure environment.
 
-## Deployment Guide
+Glances provides lightweight, real-time infrastructure observability across core infrastructure nodes, enabling centralized monitoring of system performance, resource utilization, and service health.
 
-### 1. Installation
-Update your package list and install the necessary Python tools, then install Glances with web support:
+---
 
-# Update and install pip
+## Infrastructure Role
+
+Glances functions as the primary lightweight monitoring platform for operational visibility across the infrastructure environment.
+
+The platform provides monitoring for:
+
+- CPU utilization
+- Memory usage
+- Disk activity
+- Network throughput
+- Running processes
+- Service health
+- System uptime and resource availability
+
+---
+
+## Monitored Infrastructure Nodes
+
+| Node | Role | Access Endpoint |
+|------|------|-----------------|
+| `infra-hub` | Primary Infrastructure Node | `<infra-hub-ip>:61208` |
+| `redundant-net` | Secondary Infrastructure Node | `<redundant-net-ip>:61208` |
+
+---
+
+## Deployment Objectives
+
+- Establish centralized infrastructure visibility
+- Monitor system resource utilization in real time
+- Improve operational awareness across infrastructure nodes
+- Support troubleshooting and performance analysis
+- Prepare for future monitoring expansion and alerting integration
+
+---
+
+## Installation & Deployment
+
+### System Preparation
+
+Update system packages and install required Python dependencies:
+
+```bash
 sudo apt update && sudo apt install python3-pip -y
+```
 
-# Install Glances with web dependencies
+---
+
+### Install Glances
+
+Install Glances with web interface support:
+
+```bash
 sudo pip3 install glances[web] --break-system-packages
+```
 
-### 2. Configure Firewall
-Allow traffic through the Glances web port:
+---
 
+## Firewall Configuration
+
+Allow inbound access to the Glances monitoring web interface:
+
+```bash
 sudo ufw allow 61208/tcp
+```
 
-### 3. Automate as a System Service
-To ensure Glances starts on boot, create a systemd service file:
+---
 
+## Systemd Service Configuration
+
+To ensure Glances automatically starts during system boot, create the following service file:
+
+```bash
 sudo nano /etc/systemd/system/glances.service
+```
 
-Paste the following configuration into the file:
+Insert the following configuration:
 
+```ini
 [Unit]
-Description=Glances
+Description=Glances Infrastructure Monitoring
 After=network.target
 
 [Service]
@@ -39,16 +96,67 @@ Restart=always
 
 [Install]
 WantedBy=multi-user.target
+```
 
-Save and exit (Ctrl+O, Enter, Ctrl+X), then enable and start the service:
+---
 
+## Service Initialization
+
+Reload the systemd daemon and enable the service:
+
+```bash
 sudo systemctl daemon-reload
 sudo systemctl enable glances
 sudo systemctl start glances
+```
 
-### 4. Verification
-Verify the service is running:
+---
 
+## Validation & Testing
+
+Verify the monitoring service is operational:
+
+```bash
 systemctl status glances
+```
 
-Access the dashboard via your browser at http://<server-ip>:61208.
+Access the monitoring dashboard through a web browser:
+
+```text
+http://<infra-hub-ip>:61208
+```
+
+---
+
+## Infrastructure Integration
+
+Glances operates alongside other infrastructure services within the `infra-ops` ecosystem, including:
+
+- `pihole-setup`
+- `unbound`
+- `redundant-net`
+- `samba-nas`
+
+The monitoring platform provides operational visibility into the overall health and performance of the infrastructure environment.
+
+---
+
+## Future Improvements
+
+Planned future enhancements include:
+
+- Centralized alerting integration
+- Expanded node monitoring coverage
+- Historical metrics collection
+- Dashboard aggregation
+- Infrastructure visualization integration
+- Container monitoring support
+
+---
+
+## Operational Notes
+
+The deployment of Glances marked the introduction of centralized operational observability across the infrastructure environment.
+
+This service supports proactive infrastructure management, troubleshooting, and long-term operational scalability across the `infra-ops` ecosystem.
+This monitoring layer establishes the foundation for future centralized infrastructure observability and operational analytics.
