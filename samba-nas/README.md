@@ -1,179 +1,205 @@
-# Hub NAS Samba Server
+# Samba NAS Infrastructure Services
 
 ## Overview
 
-This project documents the deployment and configuration of a lightweight NAS (Network Attached Storage) solution hosted on a repurposed HP laptop running Ubuntu Server. The infrastructure node functions as a centralized storage server while also supporting network services including Pi-hole, Unbound DNS, Glances monitoring, and remote SSH administration.
+This module documents the deployment and operational configuration of Samba-based network-attached storage services within the `infra-ops` infrastructure environment.
 
-The NAS was configured using Samba for Windows/Linux interoperability and persistent NTFS external storage mounting for long-term accessibility and operational stability.
+The Samba NAS service provides centralized file sharing, persistent infrastructure storage, and network-accessible data management across the local infrastructure environment.
 
----
+The service operates on the primary infrastructure node:
 
-## Objectives
-
-* Deploy centralized NAS storage on low-resource hardware
-* Configure persistent external drive mounting using UUIDs
-* Enable Windows/Linux network file sharing via Samba
-* Practice Linux system administration and infrastructure troubleshooting
-* Maintain lightweight infrastructure suitable for a home lab environment
-* Document deployment steps and operational workflows
+- Hostname: `infra-hub`
+- Platform: Ubuntu Server
+- Role: Centralized Network Storage & Shared Infrastructure Services
 
 ---
 
-## Infrastructure Overview
+## Infrastructure Role
 
-### Primary Infrastructure Hub
+The Samba NAS service functions as the centralized storage layer within the `infra-ops` environment.
 
-* Hostname: `blackhole`
-* Device Role: Infrastructure Hub Server
-* OS: Ubuntu Server
-* Management Method: SSH
-* IP Address: `192.168.1.226`
+Primary responsibilities include:
 
-### Services Running
+- Network file sharing
+- Persistent infrastructure storage
+- Shared operational data access
+- Centralized file management
+- Cross-device storage accessibility
+- Future backup and archival support
 
-* Pi-hole
-* Unbound DNS
-* Glances Monitoring
-* Samba NAS
-* SSH Remote Administration
+This infrastructure service establishes the foundation for future backup strategies, persistent service storage, and infrastructure data management.
 
 ---
 
-## Storage Configuration
+## Deployment Objectives
 
-### External NAS Storage
+- Deploy centralized network storage services
+- Enable secure file sharing across infrastructure devices
+- Maintain persistent storage availability
+- Support operational data accessibility
+- Improve infrastructure storage organization
+- Prepare for future backup and archival integration
 
-* Drive Type: External USB HDD
-* Filesystem: NTFS
-* Mount Point:
+---
+
+## Samba Installation & Configuration
+
+### Install Samba Services
+
+Update system packages and install Samba:
 
 ```bash
-/mnt/hub_nas
-```
-
-### Persistent Mount Configuration
-
-Configured using `/etc/fstab` with UUID-based mounting for reboot persistence.
-
-Example:
-
-```bash
-UUID=4E1AEA7B1AEA6007 /mnt/hub_nas ntfs-3g defaults 0 0
+sudo apt update && sudo apt install samba -y
 ```
 
 ---
 
-## Samba Configuration
+### Create Shared Storage Directory
 
-### Samba Share Name
-
-```bash
-HubNAS
-```
-
-### SMB Access
-
-Accessible from Windows File Explorer using:
+Create the shared storage directory structure:
 
 ```bash
-\\192.168.1.226\
+sudo mkdir -p /srv/samba/shared
 ```
 
-### Example Samba Share Configuration
+Assign appropriate ownership and permissions:
+
+```bash
+sudo chown nobody:nogroup /srv/samba/shared
+sudo chmod 0775 /srv/samba/shared
+```
+
+---
+
+### Samba Configuration
+
+Edit the Samba configuration file:
+
+```bash
+sudo nano /etc/samba/smb.conf
+```
+
+Add the following share configuration:
 
 ```ini
-[HubNAS]
-   path = /mnt/hub_nas
-   browseable = yes
-   writable = yes
-   read only = no
-   guest ok = no
+[Shared]
+path = /srv/samba/shared
+browseable = yes
+read only = no
+guest ok = yes
+create mask = 0775
+directory mask = 0775
 ```
 
 ---
 
-## Deployment Steps
+## Service Initialization
 
-1. Connected and identified external storage using `lsblk`
-2. Verified filesystem and UUID using `blkid`
-3. Created Linux mount point
-4. Mounted NTFS storage using `ntfs-3g`
-5. Installed and configured Samba
-6. Configured SMB authentication
-7. Troubleshot Samba configuration syntax issues
-8. Configured persistent mounting with `/etc/fstab`
-9. Validated reboot persistence using `mount -a`
+Restart and enable Samba services:
+
+```bash
+sudo systemctl restart smbd
+sudo systemctl enable smbd
+```
 
 ---
 
-## Troubleshooting Notes
+## Validation & Testing
 
-### Initial NTFS Mount Failure
+The following validation procedures were performed:
 
-Issue:
+- Verified Samba configuration syntax
+- Confirmed network share accessibility
+- Tested Linux client connectivity
+- Validated file read/write operations
+- Confirmed persistent share availability after reboot
+- Verified service startup behavior
+- Confirmed successful network discovery
 
-```bash
-wrong fs type, bad option, bad superblock
-```
-
-Resolution:
-
-* Verified `ntfs-3g` installation
-* Switched mount type from `ntfs3` to `ntfs-3g`
-
-### Samba Service Failure
-
-Issue:
-
-```bash
-set_variable_helper(no#): value is not boolean!
-```
-
-Resolution:
-
-* Located malformed Samba config entry:
-
-```ini
-guest ok = no#
-```
-
-* Removed invalid trailing character
-* Validated configuration using:
+Validate Samba configuration syntax:
 
 ```bash
 testparm
 ```
 
+Verify Samba service status:
+
+```bash
+systemctl status smbd
+```
+
 ---
 
-## Skills Demonstrated
+## Operational Troubleshooting
 
-* Linux System Administration
-* Samba Configuration
-* NAS Deployment
-* Persistent Storage Mounting
-* SSH Remote Administration
-* Infrastructure Troubleshooting
-* Network File Sharing
-* Home Lab Infrastructure Design
-* Cross-Platform File Sharing
-* Service Validation and Testing
+### Issue: Share Mount Failures
+
+#### Cause
+
+Initial mount attempts failed due to incorrect share configuration formatting and inconsistent Samba permissions.
+
+#### Resolution
+
+- Corrected Samba configuration syntax
+- Verified directory ownership and permissions
+- Restarted Samba services after configuration changes
+- Validated share accessibility using Linux client systems
+
+#### Validation
+
+Successful network share access was confirmed after service restart and configuration correction.
+
+---
+
+### Issue: Inconsistent Share Accessibility
+
+#### Cause
+
+Network discovery inconsistencies occurred during early deployment and testing.
+
+#### Resolution
+
+- Verified service status
+- Confirmed firewall configuration
+- Revalidated Samba share configuration
+- Tested connectivity across multiple client devices
+
+#### Validation
+
+Persistent network share accessibility was confirmed after infrastructure validation procedures.
+
+---
+
+## Infrastructure Integration
+
+The Samba NAS service integrates with additional infrastructure modules within the `infra-ops` ecosystem, including:
+
+- `pihole-setup`
+- `glances-monitoring`
+- `redundant-net`
+- `unbound`
+
+The storage platform provides centralized operational storage services supporting infrastructure persistence, troubleshooting, and future backup strategies.
 
 ---
 
 ## Future Improvements
 
-* Docker Integration
-* Grafana Monitoring
-* Automated Backups
-* VPN Remote Access
-* Infrastructure Topology Diagrams
-* Backup Node Integration
-* Network Segmentation
-* Secondary NAS Redundancy
+Planned future enhancements include:
+
+- Automated backup integration
+- Snapshot-based storage recovery
+- Expanded storage capacity
+- RAID-enabled storage redundancy
+- Container volume persistence
+- Centralized infrastructure backups
+- Offsite backup replication
+- Infrastructure storage monitoring integration
 
 ---
 
-## Project Status
+## Operational Notes
 
-Active / Ongoing Home Lab Infrastructure Project
+The implementation of Samba NAS services introduced centralized persistent storage capabilities into the `infra-ops` environment.
+
+This deployment established the foundation for future infrastructure backup strategies, operational data persistence, and scalable network storage services across the infrastructure platform.
