@@ -1,8 +1,8 @@
-# infra-ops
+# Infra-Ops
 
-A centralized, Linux-based infrastructure operations repository focused on resilient network services, self-hosted infrastructure, operational observability, and scalable systems administration.
+A centralized Linux infrastructure operations repository focused on DNS services, monitoring and observability, storage services, infrastructure resiliency, and self-hosted systems administration.
 
-This repository documents the deployment, configuration, validation, and operational evolution of the `infra-ops` infrastructure environment.
+This repository documents the deployment, configuration, monitoring, troubleshooting, and ongoing evolution of a multi-node homelab environment built around operational reliability and documentation-driven infrastructure management.
 
 ---
 
@@ -10,122 +10,214 @@ This repository documents the deployment, configuration, validation, and operati
 
 The `infra-ops` environment is built around a modular infrastructure philosophy emphasizing:
 
-- Infrastructure resiliency
-- Operational continuity
-- Recursive DNS independence
-- Centralized infrastructure services
-- Monitoring and observability
-- Documentation-driven operations
-- Scalable infrastructure standardization
+* Infrastructure Resiliency
+* Operational Continuity
+* Recursive DNS Independence
+* Monitoring And Observability
+* Documentation-Driven Operations
+* Service Redundancy
+* Centralized Storage Services
+* Scalable Infrastructure Standardization
 
-The environment leverages Ubuntu Server as the foundational infrastructure platform supporting DNS services, monitoring, network storage, and redundancy-focused architecture.
+The environment leverages Ubuntu Server as the foundational platform supporting DNS services, monitoring platforms, storage services, and redundancy-focused architecture.
 
 ---
 
 ## Infrastructure Architecture
 
-The infrastructure environment currently operates across primary and secondary infrastructure nodes:
+The environment currently operates across two infrastructure nodes:
 
-| Node | Role |
-|------|------|
-| `infra-hub` | Primary Infrastructure Node |
-| `redundant-net` | Secondary Redundancy & Failover Node |
+| Node            | Role                          |
+| --------------- | ----------------------------- |
+| `infra-hub`     | Primary Infrastructure Node   |
+| `redundant-net` | Secondary Infrastructure Node |
 
-The environment integrates multiple infrastructure layers including:
+### Core Infrastructure Services
 
-- DNS filtering and recursive DNS services
-- Infrastructure redundancy and failover
-- Centralized storage services
-- Infrastructure monitoring and observability
-- Operational troubleshooting and validation workflows
+#### DNS Services
+
+* Pi-hole
+* Unbound
+
+#### Monitoring & Observability
+
+* Grafana
+* Prometheus
+* Loki
+* Promtail
+* Node Exporter
+* Pi-hole Exporter
+* Uptime Kuma
+* Glances
+
+#### Storage Services
+
+* Samba NAS
+* HUB NAS Storage
+* RN Backup NAS Storage
 
 ---
 
 ## Infrastructure Modules
 
-| Module | Purpose |
-|--------|---------|
-| `pihole-setup` | DNS filtering infrastructure and network-wide advertisement filtering |
-| `unbound` | Recursive DNS infrastructure and private DNS query resolution |
-| `redundant-net` | Infrastructure redundancy and DNS failover architecture |
-| `glances-monitoring` | Infrastructure monitoring and operational observability |
-| `samba-nas` | Centralized network storage and persistent infrastructure services |
+| Module               | Purpose                                                 |
+| -------------------- | ------------------------------------------------------- |
+| `pihole-setup`       | DNS Filtering Infrastructure And DNS Observability      |
+| `unbound`            | Recursive DNS Infrastructure And Private DNS Resolution |
+| `redundant-net`      | Secondary Infrastructure Node And Resiliency Platform   |
+| `glances-monitoring` | Host-Level Monitoring And Operational Visibility        |
+| `samba-nas`          | Network Attached Storage And Infrastructure Persistence |
 
 ---
 
-## Operational Objectives
+## Monitoring Stack
 
-The infrastructure environment is designed around the following operational goals:
+The environment utilizes a centralized monitoring and observability stack.
 
-- Improve infrastructure resiliency
-- Reduce single points of failure
-- Maintain operational continuity
-- Establish recursive DNS independence
-- Improve infrastructure observability
-- Standardize infrastructure documentation
-- Support scalable infrastructure expansion
-- Develop modular infrastructure services
+### Monitoring Components
+
+| Service          | Purpose                 |
+| ---------------- | ----------------------- |
+| Grafana          | Dashboard Visualization |
+| Prometheus       | Metrics Collection      |
+| Loki             | Log Aggregation         |
+| Promtail         | Log Shipping            |
+| Node Exporter    | System Metrics          |
+| Pi-hole Exporter | DNS Metrics             |
+| Uptime Kuma      | Service Monitoring      |
+| Glances          | Host-Level Monitoring   |
+
+### Monitoring Coverage
+
+Current monitoring visibility includes:
+
+* CPU Utilization
+* Memory Utilization
+* Root Filesystem Monitoring
+* NAS Utilization Monitoring
+* DNS Activity Monitoring
+* Network Traffic Monitoring
+* Container Log Visibility
+* Service Health Monitoring
+* Infrastructure Availability Monitoring
+* Drive Health Monitoring
+* Drive Temperature Monitoring
 
 ---
 
-## Infrastructure Philosophy
+## DNS Architecture
 
-This repository emphasizes documentation-driven infrastructure operations, operational validation, iterative infrastructure refinement, and resiliency-focused systems administration.
+The environment utilizes a dual-node DNS architecture.
 
-The environment continues to evolve through structured deployment practices, infrastructure standardization, troubleshooting validation, and modular service integration.
+### Primary DNS Infrastructure
+
+* Pi-hole
+* Unbound
+* Hosted On `infra-hub`
+
+### Secondary DNS Infrastructure
+
+* Pi-hole
+* Unbound
+* Hosted On `redundant-net`
+
+This architecture provides:
+
+* Recursive DNS Independence
+* DNS Resiliency
+* Reduced Dependency On External DNS Providers
+* Improved Fault Tolerance
+* Infrastructure Continuity
 
 ---
 
-## Validation & Operational Practices
+## Storage Architecture
+
+The infrastructure currently utilizes dual NAS deployments.
+
+| Node            | Mount Path     | Purpose             |
+| --------------- | -------------- | ------------------- |
+| `infra-hub`     | `/mnt/hub-nas` | Primary NAS Storage |
+| `redundant-net` | `/mnt/rn-nas`  | Backup NAS Storage  |
+
+Storage visibility is integrated into the monitoring stack through Prometheus, Node Exporter, Grafana, and Glances.
+
+---
+
+## Documentation Structure
+
+### Diagrams
+
+```text
+docs/diagrams/
+```
+
+Contains:
+
+* Network Topology Diagrams
+* DNS Flow Diagrams
+* Service Dependency Diagrams
+
+### Monitoring
+
+```text
+docs/monitoring/
+```
+
+Contains:
+
+* Monitoring Documentation
+* Dashboard Screenshots
+* Monitoring Architecture References
+
+---
+
+## Operational Practices
 
 Operational workflows within the environment include:
 
-- Service validation testing
-- Recursive DNS verification
-- Infrastructure failover testing
-- Monitoring integration
-- Operational troubleshooting documentation
-- Configuration standardization
-- Incremental infrastructure refinement
+* Service Validation Testing
+* Recursive DNS Verification
+* Infrastructure Monitoring
+* DNS Redundancy Validation
+* NAS Monitoring Validation
+* Operational Troubleshooting Documentation
+* Configuration Standardization
+* Incremental Infrastructure Refinement
 
 ---
 
 ## Future Roadmap
 
-Planned future infrastructure initiatives include:
+Planned future initiatives include:
 
-- Infrastructure diagram integration
-- Expanded redundancy architecture
-- Centralized backup strategies
-- Infrastructure monitoring expansion
-- Containerized service deployment
-- Infrastructure-as-code workflows
-- Automated deployment standardization
-- Centralized operational documentation
-- Expanded observability and alerting
-
----
-
-## Documentation Expansion
-
-Future documentation growth within the repository may include:
-
-- `/docs/network-diagrams`
-- `/docs/troubleshooting`
-- `/docs/workflows`
-- `/docs/infrastructure-evolution`
-- `/docs/screenshots`
-
-These additions will further support operational consistency, infrastructure scalability, and long-term documentation maintainability.
+* Infrastructure Alerting
+* VLAN And Subnet Segmentation
+* Reverse Proxy Deployment
+* Additional Backup Automation
+* Disaster Recovery Testing
+* Infrastructure-As-Code Workflows
+* Expanded Monitoring Capabilities
+* Long-Term Observability Enhancements
 
 ---
 
-## Operational Notes
+## Repository Philosophy
 
-The `infra-ops` repository documents the ongoing evolution from isolated self-hosted services into a structured infrastructure operations environment focused on resiliency, observability, and scalable infrastructure management.
+This repository documents the progression from isolated self-hosted services into a structured infrastructure operations environment emphasizing resiliency, observability, documentation, and continuous improvement.
 
-This repository serves as both an operational reference and a continuously evolving infrastructure engineering knowledge base.
+The goal is not only to deploy services, but to build, validate, document, monitor, and continuously improve a resilient infrastructure ecosystem.
 
 ---
 
-Maintained by: Ted Phipps | Infrastructure & Systems Operations
+## Maintainer
+
+**Ted Phipps**
+
+### Focus Areas
+
+* Infrastructure Operations
+* Systems Administration
+* Monitoring & Observability
+* DNS Services
+* Linux Infrastructure
