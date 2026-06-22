@@ -4,42 +4,44 @@
 
 This module documents the deployment and operational integration of Glances within the `infra-ops` infrastructure environment.
 
-Glances provides lightweight, real-time infrastructure observability across core infrastructure nodes, enabling centralized monitoring of system performance, resource utilization, and service health.
+Glances provides lightweight, real-time host monitoring across core infrastructure nodes, delivering visibility into system performance, resource utilization, process activity, and service health.
+
+Glances serves as a complementary monitoring platform alongside Grafana, Prometheus, Loki, Promtail, Node Exporter, Pi-hole Exporter, and Uptime Kuma.
 
 ---
 
 ## Infrastructure Role
 
-Glances functions as the primary lightweight monitoring platform for operational visibility across the infrastructure environment.
+Glances functions as a lightweight host-level monitoring platform that provides immediate operational visibility into infrastructure resources.
 
 The platform provides monitoring for:
 
-- CPU utilization
-- Memory usage
-- Disk activity
-- Network throughput
-- Running processes
-- Service health
-- System uptime and resource availability
+* CPU utilization
+* Memory usage
+* Disk activity
+* Network throughput
+* Running processes
+* Service health
+* System uptime and resource availability
 
 ---
 
 ## Monitored Infrastructure Nodes
 
-| Node | Role | Access Endpoint |
-|------|------|-----------------|
-| `infra-hub` | Primary Infrastructure Node | `<infra-hub-ip>:61208` |
+| Node            | Role                          | Access Endpoint            |
+| --------------- | ----------------------------- | -------------------------- |
+| `infra-hub`     | Primary Infrastructure Node   | `<infra-hub-ip>:61208`     |
 | `redundant-net` | Secondary Infrastructure Node | `<redundant-net-ip>:61208` |
 
 ---
 
 ## Deployment Objectives
 
-- Establish centralized infrastructure visibility
-- Monitor system resource utilization in real time
-- Improve operational awareness across infrastructure nodes
-- Support troubleshooting and performance analysis
-- Prepare for future monitoring expansion and alerting integration
+* Establish centralized infrastructure visibility
+* Monitor system resource utilization in real time
+* Improve operational awareness across infrastructure nodes
+* Support troubleshooting and performance analysis
+* Prepare for future monitoring expansion and alerting integration
 
 ---
 
@@ -52,8 +54,6 @@ Update system packages and install required Python dependencies:
 ```bash
 sudo apt update && sudo apt install python3-pip -y
 ```
-
----
 
 ### Install Glances
 
@@ -77,13 +77,11 @@ sudo ufw allow 61208/tcp
 
 ## Systemd Service Configuration
 
-To ensure Glances automatically starts during system boot, create the following service file:
+Create the Glances service:
 
 ```bash
 sudo nano /etc/systemd/system/glances.service
 ```
-
-Insert the following configuration:
 
 ```ini
 [Unit]
@@ -102,8 +100,6 @@ WantedBy=multi-user.target
 
 ## Service Initialization
 
-Reload the systemd daemon and enable the service:
-
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable glances
@@ -114,13 +110,13 @@ sudo systemctl start glances
 
 ## Validation & Testing
 
-Verify the monitoring service is operational:
+Verify service status:
 
 ```bash
 systemctl status glances
 ```
 
-Access the monitoring dashboard through a web browser:
+Access the web interface:
 
 ```text
 http://<infra-hub-ip>:61208
@@ -130,14 +126,40 @@ http://<infra-hub-ip>:61208
 
 ## Infrastructure Integration
 
-Glances operates alongside other infrastructure services within the `infra-ops` ecosystem, including:
+Glances operates alongside the broader observability stack:
 
-- `pihole-setup`
-- `unbound`
-- `redundant-net`
-- `samba-nas`
+* Grafana
+* Prometheus
+* Loki
+* Promtail
+* Node Exporter
+* Pi-hole Exporter
+* Uptime Kuma
 
-The monitoring platform provides operational visibility into the overall health and performance of the infrastructure environment.
+Glances also supports visibility into infrastructure services including:
+
+* Pi-hole
+* Unbound
+* Samba NAS
+* Docker workloads
+* Infrastructure host resources
+
+---
+
+## Screenshot References
+
+Current monitoring screenshots are maintained within:
+
+```text
+docs/monitoring/screenshots/
+```
+
+Available monitoring screenshots include:
+
+* hub-glances-dashboard.png
+* rn-glances-dashboard.png
+* infra-hub-grafana-dashboard.png
+* rn-grafana-dashboard.png
 
 ---
 
@@ -145,18 +167,17 @@ The monitoring platform provides operational visibility into the overall health 
 
 Planned future enhancements include:
 
-- Centralized alerting integration
-- Expanded node monitoring coverage
-- Historical metrics collection
-- Dashboard aggregation
-- Infrastructure visualization integration
-- Container monitoring support
+* Additional alerting integrations
+* Expanded infrastructure monitoring coverage
+* Future VLAN and subnet monitoring
+* Additional service health checks
+* Monitoring standardization across future infrastructure nodes
+* Long-term observability and analytics enhancements
 
 ---
 
 ## Operational Notes
 
-The deployment of Glances marked the introduction of centralized operational observability across the infrastructure environment.
+Glances was the first monitoring platform deployed within the homelab and served as the foundation for the broader observability stack that now includes Grafana, Prometheus, Loki, Promtail, Node Exporter, Pi-hole Exporter, and Uptime Kuma.
 
-This service supports proactive infrastructure management, troubleshooting, and long-term operational scalability across the `infra-ops` ecosystem.
-This monitoring layer establishes the foundation for future centralized infrastructure observability and operational analytics.
+The platform continues to provide fast host-level visibility for operational troubleshooting, performance validation, and infrastructure health monitoring across both infrastructure nodes.
