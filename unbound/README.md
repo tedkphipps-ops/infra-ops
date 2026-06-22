@@ -2,11 +2,11 @@
 
 ## Overview
 
-This module documents the deployment and operational configuration of Unbound recursive DNS services within the `infra-ops` infrastructure environment.
+This module documents the deployment, configuration, and operational integration of Unbound recursive DNS services within the `infra-ops` infrastructure environment.
 
-Unbound provides private, recursive DNS resolution services supporting infrastructure independence, improved DNS privacy, reduced reliance on external DNS providers, and enhanced operational resiliency across the infrastructure environment.
+Unbound provides private recursive DNS resolution supporting infrastructure independence, enhanced DNS privacy, reduced reliance on third-party DNS providers, and improved operational resiliency across the homelab ecosystem.
 
-The service operates across both primary and secondary infrastructure nodes to support redundant recursive DNS resolution.
+The service operates across both infrastructure nodes and functions as the recursive backend for Pi-hole DNS filtering services.
 
 ---
 
@@ -16,34 +16,36 @@ Unbound functions as the recursive DNS resolution layer within the `infra-ops` e
 
 Primary responsibilities include:
 
-- Recursive DNS query resolution
-- Independent DNS infrastructure operation
-- DNS privacy enhancement
-- Reduced external DNS dependency
-- Infrastructure DNS resiliency
-- Redundant recursive query handling
+* Recursive DNS query resolution
+* Independent DNS infrastructure operation
+* DNS privacy enhancement
+* Reduced external DNS dependency
+* Infrastructure DNS resiliency
+* Redundant recursive query handling
+* Recursive DNS caching and performance optimization
 
-Unbound integrates directly with Pi-hole to provide secure and controlled recursive DNS services throughout the infrastructure environment.
+Unbound integrates directly with Pi-hole to provide filtered DNS services backed by private recursive resolution.
 
 ---
 
 ## Infrastructure Architecture
 
-| Node | Role | Services |
-|------|------|-----------|
-| `infra-hub` | Primary Infrastructure Node | Pi-hole, Unbound, Samba, Glances |
-| `redundant-net` | Secondary Redundancy Node | Unbound, DNS Failover |
+| Node            | Role                          | Services                                                                               |
+| --------------- | ----------------------------- | -------------------------------------------------------------------------------------- |
+| `infra-hub`     | Primary Infrastructure Node   | Pi-hole, Unbound, Samba NAS, Glances, Grafana, Prometheus, Loki, Promtail, Uptime Kuma |
+| `redundant-net` | Secondary Infrastructure Node | Pi-hole, Unbound, Samba NAS, Glances, Grafana, Prometheus, Loki, Promtail              |
 
 ---
 
 ## Deployment Objectives
 
-- Deploy private recursive DNS infrastructure
-- Improve DNS privacy and independence
-- Reduce reliance on third-party DNS providers
-- Support redundant DNS resolution
-- Improve infrastructure resiliency
-- Establish scalable recursive DNS architecture
+* Deploy private recursive DNS infrastructure
+* Improve DNS privacy and independence
+* Reduce reliance on third-party DNS providers
+* Support redundant DNS resolution
+* Improve infrastructure resiliency
+* Establish scalable recursive DNS architecture
+* Create a foundation for long-term DNS observability
 
 ---
 
@@ -69,7 +71,7 @@ sudo nano /etc/unbound/unbound.conf.d/pi-hole.conf
 
 Add the following recursive DNS configuration:
 
-```conf
+```yaml
 server:
     verbosity: 0
     interface: 127.0.0.1
@@ -94,7 +96,7 @@ server:
 
 ## Service Initialization
 
-Enable and start Unbound services:
+Enable and start Unbound:
 
 ```bash
 sudo systemctl enable unbound
@@ -107,13 +109,13 @@ sudo systemctl restart unbound
 
 Pi-hole forwards DNS requests to the local Unbound recursive resolver.
 
-### Example Pi-hole Forwarding Configuration
+Example Pi-hole forwarding configuration:
 
 ```text
 127.0.0.1#5335
 ```
 
-This integration allows Pi-hole to provide filtered DNS services while Unbound performs secure recursive query resolution.
+This integration allows Pi-hole to provide DNS filtering while Unbound performs secure recursive query resolution.
 
 ---
 
@@ -121,20 +123,20 @@ This integration allows Pi-hole to provide filtered DNS services while Unbound p
 
 The following validation procedures were performed:
 
-- Verified recursive DNS query resolution
-- Confirmed Unbound service startup
-- Validated Pi-hole integration
-- Confirmed local recursive DNS functionality
-- Tested DNS resolution continuity across infrastructure nodes
-- Verified recursive query responses during failover testing
+* Verified recursive DNS query resolution
+* Confirmed Unbound service startup
+* Validated Pi-hole integration
+* Confirmed local recursive DNS functionality
+* Tested DNS resolution continuity across infrastructure nodes
+* Verified recursive query responses during failover testing
 
-Verify Unbound service status:
+Verify service status:
 
 ```bash
 systemctl status unbound
 ```
 
-Test recursive DNS resolution:
+Test recursive resolution:
 
 ```bash
 dig google.com @127.0.0.1 -p 5335
@@ -150,27 +152,42 @@ nslookup openai.com 127.0.0.1
 
 ## Recursive DNS Benefits
 
-The deployment of Unbound provides several operational advantages within the infrastructure environment:
+The deployment of Unbound provides several operational advantages:
 
-- Increased DNS privacy
-- Independent recursive DNS control
-- Reduced dependency on external DNS providers
-- Improved DNS query integrity
-- Recursive caching improvements
-- Infrastructure-level DNS resiliency
+* Increased DNS privacy
+* Independent recursive DNS control
+* Reduced dependency on external DNS providers
+* Improved DNS query integrity
+* Recursive caching improvements
+* Infrastructure-level DNS resiliency
+* Improved visibility into DNS operations
+
+---
+
+## Monitoring & Validation
+
+Recursive DNS operations are monitored through:
+
+* Pi-hole query metrics
+* Grafana dashboards
+* Prometheus metric collection
+* Uptime Kuma service monitoring
+
+These platforms provide operational visibility into DNS availability, query activity, service health, and infrastructure status.
 
 ---
 
 ## Infrastructure Integration
 
-Unbound integrates with additional infrastructure modules within the `infra-ops` ecosystem, including:
+Unbound integrates with additional infrastructure modules throughout the `infra-ops` ecosystem:
 
-- `pihole-setup`
-- `redundant-net`
-- `glances-monitoring`
-- `samba-nas`
+* `pihole-setup`
+* `redundant-net`
+* `glances-monitoring`
+* `samba-nas`
+* `monitoring`
 
-Together, these services establish a resilient and modular infrastructure platform supporting operational continuity, monitoring, and infrastructure scalability.
+Together these services establish a resilient infrastructure platform supporting DNS services, monitoring, storage services, and operational continuity.
 
 ---
 
@@ -178,19 +195,24 @@ Together, these services establish a resilient and modular infrastructure platfo
 
 Planned future enhancements include:
 
-- DNSSEC hardening improvements
-- Automated root hints updates
-- Multi-node recursive DNS synchronization
-- Containerized DNS deployment
-- Encrypted upstream DNS integration
-- Centralized infrastructure monitoring
-- Expanded redundancy testing
-- Infrastructure visualization integration
+* Additional DNS resiliency testing
+* Expanded failover validation procedures
+* Future VLAN and subnet DNS segmentation
+* Additional recursive DNS monitoring
+* Infrastructure-wide alerting integration
+* Long-term DNS analytics and reporting
+* Continued documentation standardization
 
 ---
 
 ## Operational Notes
 
-The implementation of Unbound introduced fully recursive DNS infrastructure into the `infra-ops` environment, significantly improving DNS independence, resiliency, and operational control.
+The implementation of Unbound introduced fully recursive DNS resolution into the homelab environment and eliminated reliance on third-party public DNS providers for recursive query resolution.
 
-This deployment established the foundation for long-term infrastructure scalability, redundant recursive resolution, and privacy-focused DNS operations across the infrastructure platform.
+Unbound operates as the recursive backend for both Pi-hole instances and serves as a foundational component of the infrastructure DNS architecture.
+
+The deployment established the basis for resilient DNS operations, privacy-focused name resolution, and future infrastructure growth across both infrastructure nodes.
+
+A significant operational milestone during deployment included resolving trust-anchor configuration issues and validating recursive resolution functionality through Pi-hole integration and redundancy testing.
+
+The Unbound deployment remains a core component of the infrastructure design and continues to provide private, recursive DNS services across the homelab ecosystem.
