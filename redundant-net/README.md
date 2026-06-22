@@ -1,76 +1,120 @@
-# Redundant Infrastructure DNS Architecture
+# Redundant Infrastructure Node
 
 ## Overview
 
-This module documents the deployment and operational design of the secondary infrastructure redundancy node within the `infra-ops` environment.
+This module documents the deployment, configuration, and operational role of the `redundant-net` infrastructure node within the `infra-ops` homelab environment.
 
-The `redundant-net` node provides infrastructure resiliency through redundant DNS services, recursive query resolution, and failover support for the primary infrastructure environment.
+`redundant-net` functions as the secondary infrastructure node, providing redundancy, monitoring, storage services, DNS resiliency, and operational continuity for the homelab ecosystem.
 
-This architecture helps eliminate single points of failure while improving long-term operational stability and network reliability.
+Originally deployed as a DNS failover platform, the node has evolved into a fully integrated infrastructure system mirroring many core services hosted on `infra-hub`.
 
 ---
 
 ## Infrastructure Role
 
-`redundant-net` functions as the secondary infrastructure redundancy node within the environment.
+`redundant-net` serves as the secondary infrastructure node within the environment.
 
 Primary responsibilities include:
 
-- Secondary DNS resolution
-- Recursive DNS redundancy
-- Failover support
-- Infrastructure resiliency
-- Service continuity during outages
-- Redundant recursive query handling
+* DNS redundancy
+* Recursive DNS resolution
+* Infrastructure monitoring
+* Backup NAS services
+* Log aggregation support
+* Metrics collection
+* Service continuity
+* Operational resiliency
 
-The node operates alongside `infra-hub` to maintain DNS availability across the infrastructure environment.
+The node operates alongside `infra-hub` to provide redundancy and infrastructure resilience across critical homelab services.
 
 ---
 
 ## Infrastructure Architecture
 
-| Node | Role | Services |
-|------|------|-----------|
-| `infra-hub` | Primary Infrastructure Node | Pi-hole, Unbound, Samba, Glances |
-| `redundant-net` | Secondary Redundancy Node | Unbound, DNS Failover |
+| Node            | Role                          | Core Services                                                                                         |
+| --------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `infra-hub`     | Primary Infrastructure Node   | Pi-hole, Unbound, Samba NAS, Glances, Grafana, Prometheus, Loki, Promtail, Node Exporter, Uptime Kuma |
+| `redundant-net` | Secondary Infrastructure Node | Pi-hole, Unbound, Samba NAS, Glances, Grafana, Prometheus, Loki, Promtail, Node Exporter              |
 
 ---
 
-## Deployment Objectives
+## Services Deployed
 
-- Eliminate single points of failure
-- Maintain DNS availability during outages
-- Improve infrastructure resiliency
-- Support recursive DNS redundancy
-- Enable scalable infrastructure expansion
-- Improve operational continuity across infrastructure services
+### DNS Services
+
+* Pi-hole
+* Unbound
+* Pi-hole Exporter
+
+### Monitoring & Observability
+
+* Grafana
+* Prometheus
+* Loki
+* Promtail
+* Node Exporter
+* Glances
+
+### Storage Services
+
+* Samba NAS
+* Backup NAS Storage
 
 ---
 
-## Recursive DNS Redundancy
+## Backup NAS Infrastructure
 
-The infrastructure environment utilizes Unbound recursive DNS services across both infrastructure nodes.
+`redundant-net` hosts the secondary NAS platform used for backup storage and redundancy purposes.
 
-This configuration provides:
+Current storage configuration:
 
-- Independent recursive DNS resolution
-- Reduced reliance on external DNS providers
-- Improved DNS privacy
-- Enhanced fault tolerance
-- Infrastructure-level DNS continuity
+| Component  | Value                                      |
+| ---------- | ------------------------------------------ |
+| Mount Path | `/mnt/rn-nas`                              |
+| Filesystem | NTFS3                                      |
+| Capacity   | Approximately 3 TB                         |
+| Purpose    | Backup Storage & Infrastructure Redundancy |
+
+The backup NAS supports future disaster recovery planning and infrastructure data preservation.
 
 ---
 
-## Failover Design
+## Monitoring Integration
 
-The environment is designed to continue DNS operations even if the primary infrastructure node becomes unavailable.
+The node participates in the centralized monitoring ecosystem and includes:
 
-### Redundancy Strategy
+* System temperature monitoring
+* CPU utilization monitoring
+* Memory utilization monitoring
+* Root filesystem monitoring
+* Network traffic monitoring
+* Docker container log monitoring
+* NAS utilization monitoring
+* NAS drive health monitoring
+* Pi-hole metrics monitoring
 
-- `infra-hub` functions as the primary DNS infrastructure node
-- `redundant-net` functions as the secondary failover node
-- Recursive DNS services remain available during node interruptions
-- Client systems maintain DNS functionality through secondary resolution paths
+Monitoring visibility is provided through the Redundant-Net Grafana Dashboard.
+
+---
+
+## DNS Redundancy Design
+
+The environment utilizes dual-node DNS infrastructure.
+
+### Primary DNS Node
+
+* `infra-hub`
+
+### Secondary DNS Node
+
+* `redundant-net`
+
+This design provides:
+
+* Recursive DNS redundancy
+* Improved DNS resiliency
+* Reduced dependency on external providers
+* Improved operational continuity
 
 ---
 
@@ -78,35 +122,31 @@ The environment is designed to continue DNS operations even if the primary infra
 
 The following validation procedures were performed:
 
-- Verified recursive DNS functionality on both nodes
-- Confirmed client DNS resolution continuity
-- Simulated infrastructure interruption scenarios
-- Tested secondary node failover behavior
-- Verified service recovery after node restoration
-- Confirmed infrastructure resilience during connectivity interruptions
-
----
-
-## Operational Observations
-
-Testing demonstrated that DNS services remained operational during simulated infrastructure interruptions.
-
-During cable management and hardware adjustments, the secondary redundancy node temporarily disconnected from the network, unintentionally validating failover behavior and infrastructure resiliency within the environment.
-
-This event confirmed successful redundancy functionality and reinforced the importance of infrastructure failover planning.
+* Verified Pi-hole functionality
+* Verified Unbound recursive DNS operation
+* Confirmed Prometheus metrics collection
+* Confirmed Grafana dashboard functionality
+* Verified Loki log aggregation
+* Verified NAS accessibility
+* Verified Node Exporter metrics
+* Validated monitoring dashboards
+* Tested DNS redundancy functionality
+* Confirmed service startup persistence after reboot
 
 ---
 
 ## Infrastructure Integration
 
-The redundancy architecture integrates with additional infrastructure modules within the `infra-ops` ecosystem, including:
+`redundant-net` integrates directly with the following infrastructure modules:
 
-- `pihole-setup`
-- `unbound`
-- `glances-monitoring`
-- `samba-nas`
+* `pihole-setup`
+* `unbound`
+* `samba-nas`
+* `glances-monitoring`
+* `monitoring`
+* `infra-hub`
 
-Together, these services establish a modular infrastructure platform focused on resiliency, observability, and operational continuity.
+Together, these services provide a resilient and observable infrastructure platform focused on redundancy, monitoring, and operational continuity.
 
 ---
 
@@ -114,19 +154,21 @@ Together, these services establish a modular infrastructure platform focused on 
 
 Planned future enhancements include:
 
-- Automated DNS synchronization
-- Configuration replication between nodes
-- Centralized monitoring integration
-- Infrastructure alerting
-- Containerized service deployment
-- Automated failover testing
-- Infrastructure diagram integration
-- Expanded multi-node redundancy architecture
+* Automated configuration replication
+* Enhanced backup automation
+* Additional storage expansion
+* Reverse proxy integration
+* VLAN-aware monitoring
+* Infrastructure alerting
+* Expanded redundancy testing
+* Multi-node service synchronization
 
 ---
 
 ## Operational Notes
 
-The implementation of `redundant-net` marked the transition from single-node service deployment into infrastructure resiliency engineering within the `infra-ops` environment.
+The evolution of `redundant-net` transformed the environment from a single-node homelab into a resilient multi-node infrastructure platform.
 
-This architecture established the foundation for future high-availability infrastructure expansion, operational redundancy, and scalable infrastructure design.
+The node now provides redundancy across DNS, monitoring, storage, and observability services while supporting future infrastructure growth and disaster recovery planning.
+
+This deployment represents a significant milestone in the maturation of the `infra-ops` ecosystem.
