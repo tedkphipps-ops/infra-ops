@@ -2,94 +2,192 @@
 
 ## Overview
 
-This module documents the deployment and configuration of Pi-hole on Ubuntu Server as part of the larger `infra-ops` infrastructure environment.
+This module documents the deployment, configuration, and operational integration of Pi-hole DNS filtering services within the `infra-ops` homelab environment.
 
-Pi-hole functions as the primary DNS filtering service within the network, providing centralized ad-blocking, local DNS management, and improved visibility into network traffic.
+Pi-hole serves as the primary DNS filtering platform across the infrastructure and provides centralized DNS visibility, advertisement blocking, local DNS management, and DNS observability.
 
-The service is hosted on the primary infrastructure node:
+The environment currently utilizes dual Pi-hole deployments to support DNS resiliency and service continuity.
 
-- Hostname: `infra-hub`
-- Platform: Ubuntu Server
-- Role: Primary DNS Filtering & Infrastructure Services Node
+### Infrastructure Nodes
+
+| Node            | Role                              |
+| --------------- | --------------------------------- |
+| `infra-hub`     | Primary DNS Infrastructure Node   |
+| `redundant-net` | Secondary DNS Infrastructure Node |
 
 ---
 
 ## Infrastructure Objectives
 
-- Deploy a stable DNS filtering solution for the local network
-- Establish centralized DNS visibility and management
-- Enable secure remote administration through SSH
-- Prepare the environment for recursive DNS integration using Unbound
-- Support future redundancy and failover architecture through `redundant-net`
+* Deploy centralized DNS filtering services
+* Improve network visibility and DNS observability
+* Reduce advertising and tracking traffic
+* Support recursive DNS resolution through Unbound
+* Establish DNS redundancy across infrastructure nodes
+* Improve infrastructure resiliency
+* Support long-term DNS monitoring and analytics
 
 ---
 
-## System Installation
+## Infrastructure Architecture
 
-Ubuntu Server was deployed as the foundational operating system for the infrastructure environment.
+Pi-hole operates as the DNS filtering layer within the infrastructure stack.
 
-### Initial Configuration Tasks
+Current DNS architecture:
 
-- Installed Ubuntu Server
-- Configured static network addressing
-- Enabled OpenSSH for remote management
-- Updated system packages and repositories
-- Verified network connectivity and DNS resolution
+```text
+Client Devices
+       │
+       ▼
+    Pi-hole
+       │
+       ▼
+    Unbound
+       │
+       ▼
+Recursive DNS Resolution
+```
 
-### Network Configuration
+This architecture is deployed across both infrastructure nodes to provide DNS resiliency and redundancy.
 
-| Component | Value |
-|---|---|
-| Hostname | `infra-hub` |
-| Static IP | `<infra-hub-ip>` |
-| DNS Role | Primary DNS Filtering Server |
-| Remote Access | OpenSSH |
+---
+
+## Network Configuration
+
+| Component              | Value           |
+| ---------------------- | --------------- |
+| Primary DNS Node       | `infra-hub`     |
+| Secondary DNS Node     | `redundant-net` |
+| DNS Filtering Platform | Pi-hole         |
+| Recursive Resolver     | Unbound         |
+| Remote Administration  | OpenSSH         |
 
 ---
 
 ## Pi-hole Deployment
 
-Pi-hole was installed directly on Ubuntu Server using the official installation method.
-
-### Installation Objectives
-
-- Centralized DNS filtering
-- Network-wide advertisement filtering
-- DNS request visibility
-- Simplified network-wide DNS management
+Pi-hole was deployed on Ubuntu Server infrastructure nodes using the official installation methodology.
 
 ### Core Features Enabled
 
-- DNS query logging
-- Web administration interface
-- Local DNS management
-- Blocklist integration
-- Network-wide advertisement filtering
+* DNS query logging
+* Web administration interface
+* Local DNS management
+* Blocklist integration
+* Network-wide advertisement filtering
+* DNS statistics and reporting
+* Client activity monitoring
+* DNS observability
+
+---
+
+## Recursive DNS Integration
+
+Pi-hole integrates directly with Unbound to provide private recursive DNS resolution.
+
+Benefits include:
+
+* Reduced reliance on third-party DNS providers
+* Increased DNS privacy
+* Independent recursive DNS infrastructure
+* Improved DNS query integrity
+* Infrastructure-level DNS resiliency
+
+---
+
+## Monitoring Integration
+
+Pi-hole is integrated into the centralized monitoring ecosystem.
+
+Monitoring components include:
+
+* Pi-hole Exporter
+* Grafana
+* Prometheus
+* Uptime Kuma
+* Glances
+
+Current monitoring coverage includes:
+
+* DNS query activity
+* Query volume trends
+* Advertisement blocking statistics
+* Block percentage metrics
+* Service availability
+* DNS infrastructure health
+
+---
+
+## Grafana Dashboard Integration
+
+Pi-hole metrics are visualized through Grafana dashboards hosted on both infrastructure nodes.
+
+Current dashboard visibility includes:
+
+* DNS Activity
+* Ads Blocked Today
+* Block Percentage
+* Client Activity
+* DNS Query Trends
+* Service Health Monitoring
+
+Monitoring screenshots are maintained within:
+
+```text
+docs/monitoring/screenshots/
+```
 
 ---
 
 ## Validation & Testing
 
-The following validation steps were performed after deployment:
+The following validation procedures were performed:
 
-- Verified DNS resolution functionality
-- Confirmed network-wide client connectivity
-- Validated SSH remote administration access
-- Confirmed successful Pi-hole web interface access
-- Tested DNS filtering behavior across network devices
+* Verified DNS resolution functionality
+* Confirmed network-wide client connectivity
+* Validated Pi-hole web interface access
+* Tested DNS filtering across client devices
+* Confirmed recursive DNS integration through Unbound
+* Verified Prometheus metric collection
+* Confirmed Grafana dashboard functionality
+* Validated DNS redundancy across infrastructure nodes
+* Verified service persistence following reboot
+
+---
+
+## DNS Redundancy Design
+
+The infrastructure utilizes dual Pi-hole deployments to reduce dependency on a single DNS server.
+
+### Primary DNS Infrastructure
+
+* `infra-hub`
+
+### Secondary DNS Infrastructure
+
+* `redundant-net`
+
+This design provides:
+
+* DNS service continuity
+* Improved fault tolerance
+* Recursive DNS redundancy
+* Increased infrastructure resiliency
+* Reduced service interruption risk
 
 ---
 
 ## Infrastructure Integration
 
-This deployment serves as the foundational DNS layer for additional infrastructure services within the `infra-ops` ecosystem.
+Pi-hole integrates with the following infrastructure modules:
 
-Integrated infrastructure modules include:
+* `unbound`
+* `redundant-net`
+* `glances-monitoring`
+* `samba-nas`
+* `monitoring`
 
-- `unbound`
-- `redundant-net`
-- `glances-monitoring`
-- `samba-nas`
+Together these services provide centralized DNS management, monitoring, observability, storage services, and infrastructure resiliency.
 
 ---
 
@@ -97,16 +195,19 @@ Integrated infrastructure modules include:
 
 Planned future enhancements include:
 
-- Recursive DNS integration using Unbound
-- Secondary DNS failover architecture
-- Additional monitoring and alerting
-- Infrastructure diagram integration
-- Service redundancy validation testing
+* Additional DNS analytics
+* Infrastructure alerting integration
+* Expanded DNS monitoring capabilities
+* Future VLAN and subnet-aware DNS policies
+* Enhanced resiliency testing
+* Continued documentation standardization
 
 ---
 
 ## Operational Notes
 
-This deployment marked the transition from isolated service experimentation into structured infrastructure operations and centralized service management.
+The Pi-hole deployment marked the first major infrastructure service within the homelab and served as the foundation for the broader infrastructure ecosystem that followed.
 
-The environment continues to evolve through modular infrastructure expansion, operational standardization, and documentation-driven development.
+The platform evolved from a single DNS filtering server into a dual-node DNS architecture supporting recursive DNS resolution, centralized monitoring, and infrastructure resiliency.
+
+The integration of Unbound, Pi-hole Exporter, Grafana, Prometheus, and Uptime Kuma transformed DNS services into a fully observable infrastructure component and established the foundation for future infrastructure growth across the `infra-ops` environment.
