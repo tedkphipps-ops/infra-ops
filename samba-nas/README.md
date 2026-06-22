@@ -2,43 +2,64 @@
 
 ## Overview
 
-This module documents the deployment and operational configuration of Samba-based network-attached storage services within the `infra-ops` infrastructure environment.
+This module documents the deployment, configuration, and operational integration of Samba-based Network Attached Storage (NAS) services within the `infra-ops` infrastructure environment.
 
-The Samba NAS service provides centralized file sharing, persistent infrastructure storage, and network-accessible data management across the local infrastructure environment.
+The Samba NAS platform provides centralized file sharing, persistent infrastructure storage, network-accessible data management, and storage redundancy support across the homelab ecosystem.
 
-The service operates on the primary infrastructure node:
+Storage services currently operate across both infrastructure nodes:
 
-- Hostname: `infra-hub`
-- Platform: Ubuntu Server
-- Role: Centralized Network Storage & Shared Infrastructure Services
+* `infra-hub` – Primary NAS Services
+* `redundant-net` – Backup NAS Services
+
+Together these systems provide storage availability, operational persistence, infrastructure data management, and future backup capabilities.
 
 ---
 
 ## Infrastructure Role
 
-The Samba NAS service functions as the centralized storage layer within the `infra-ops` environment.
+The Samba NAS platform functions as the storage layer within the `infra-ops` environment.
 
 Primary responsibilities include:
 
-- Network file sharing
-- Persistent infrastructure storage
-- Shared operational data access
-- Centralized file management
-- Cross-device storage accessibility
-- Future backup and archival support
+* Network file sharing
+* Persistent infrastructure storage
+* Shared operational data access
+* Centralized file management
+* Cross-device storage accessibility
+* Backup storage services
+* Future disaster recovery support
+* Infrastructure data retention
 
-This infrastructure service establishes the foundation for future backup strategies, persistent service storage, and infrastructure data management.
+The NAS platform serves as a foundational component supporting infrastructure operations, monitoring, documentation, backups, and long-term scalability.
+
+---
+
+## Infrastructure Architecture
+
+| Node            | Role                 | Storage Mount  |
+| --------------- | -------------------- | -------------- |
+| `infra-hub`     | Primary NAS Services | `/mnt/hub-nas` |
+| `redundant-net` | Backup NAS Services  | `/mnt/rn-nas`  |
+
+Current storage deployment:
+
+* HUB NAS Capacity: ~1 TB
+* RN NAS Capacity: ~3 TB
+* NTFS3 storage driver standardized across both systems
+* Samba services available through both infrastructure nodes
 
 ---
 
 ## Deployment Objectives
 
-- Deploy centralized network storage services
-- Enable secure file sharing across infrastructure devices
-- Maintain persistent storage availability
-- Support operational data accessibility
-- Improve infrastructure storage organization
-- Prepare for future backup and archival integration
+* Deploy centralized network storage services
+* Enable secure file sharing across infrastructure devices
+* Maintain persistent storage availability
+* Support operational data accessibility
+* Improve infrastructure storage organization
+* Establish backup storage capabilities
+* Prepare for future disaster recovery workflows
+* Support long-term infrastructure scalability
 
 ---
 
@@ -79,7 +100,7 @@ Edit the Samba configuration file:
 sudo nano /etc/samba/smb.conf
 ```
 
-Add the following share configuration:
+Example share configuration:
 
 ```ini
 [Shared]
@@ -108,15 +129,17 @@ sudo systemctl enable smbd
 
 The following validation procedures were performed:
 
-- Verified Samba configuration syntax
-- Confirmed network share accessibility
-- Tested Linux client connectivity
-- Validated file read/write operations
-- Confirmed persistent share availability after reboot
-- Verified service startup behavior
-- Confirmed successful network discovery
+* Verified Samba configuration syntax
+* Confirmed network share accessibility
+* Tested Linux client connectivity
+* Validated file read/write operations
+* Confirmed persistent share availability after reboot
+* Verified service startup behavior
+* Confirmed successful network discovery
+* Verified NAS mount accessibility
+* Confirmed storage visibility through monitoring platforms
 
-Validate Samba configuration syntax:
+Validate Samba configuration:
 
 ```bash
 testparm
@@ -128,58 +151,80 @@ Verify Samba service status:
 systemctl status smbd
 ```
 
+Verify mounted storage:
+
+```bash
+df -h
+```
+
+---
+
+## Monitoring & Visibility
+
+NAS services are monitored through:
+
+* Grafana dashboards
+* Prometheus
+* Node Exporter
+* Glances
+* Uptime Kuma
+
+Current monitoring includes:
+
+* NAS capacity utilization
+* Used storage
+* Free storage
+* NAS service status
+* Disk health status
+* Drive temperature monitoring
+
+Monitoring screenshots are maintained within:
+
+```text
+docs/monitoring/screenshots/
+```
+
 ---
 
 ## Operational Troubleshooting
 
-### Issue: Share Mount Failures
+### NAS Mount Standardization
 
-#### Cause
+Infrastructure storage paths were standardized to improve consistency and documentation alignment.
 
-Initial mount attempts failed due to incorrect share configuration formatting and inconsistent Samba permissions.
+Current standards:
 
-#### Resolution
+* `/mnt/hub-nas`
+* `/mnt/rn-nas`
 
-- Corrected Samba configuration syntax
-- Verified directory ownership and permissions
-- Restarted Samba services after configuration changes
-- Validated share accessibility using Linux client systems
-
-#### Validation
-
-Successful network share access was confirmed after service restart and configuration correction.
+This standardization simplified monitoring, documentation, dashboard management, and future infrastructure growth.
 
 ---
 
-### Issue: Inconsistent Share Accessibility
+### Storage Monitoring Integration
 
-#### Cause
+NAS visibility was expanded through integration with Node Exporter, Prometheus, and Grafana.
 
-Network discovery inconsistencies occurred during early deployment and testing.
+This deployment enabled:
 
-#### Resolution
-
-- Verified service status
-- Confirmed firewall configuration
-- Revalidated Samba share configuration
-- Tested connectivity across multiple client devices
-
-#### Validation
-
-Persistent network share accessibility was confirmed after infrastructure validation procedures.
+* Capacity monitoring
+* Utilization tracking
+* Health monitoring
+* Storage observability across both infrastructure nodes
 
 ---
 
 ## Infrastructure Integration
 
-The Samba NAS service integrates with additional infrastructure modules within the `infra-ops` ecosystem, including:
+The Samba NAS platform integrates with additional infrastructure modules throughout the `infra-ops` ecosystem:
 
-- `pihole-setup`
-- `glances-monitoring`
-- `redundant-net`
-- `unbound`
+* `pihole-setup`
+* `unbound`
+* `glances-monitoring`
+* `monitoring`
+* `redundant-net`
 
-The storage platform provides centralized operational storage services supporting infrastructure persistence, troubleshooting, and future backup strategies.
+The NAS platform supports infrastructure persistence, documentation storage, monitoring data retention, backup workflows, and future disaster recovery objectives.
 
 ---
 
@@ -187,19 +232,23 @@ The storage platform provides centralized operational storage services supportin
 
 Planned future enhancements include:
 
-- Automated backup integration
-- Snapshot-based storage recovery
-- Expanded storage capacity
-- RAID-enabled storage redundancy
-- Container volume persistence
-- Centralized infrastructure backups
-- Offsite backup replication
-- Infrastructure storage monitoring integration
+* Automated backup workflows
+* Cross-node backup synchronization
+* Disaster recovery testing
+* Expanded storage capacity
+* Future RAID research and evaluation
+* Additional storage monitoring
+* Long-term backup retention policies
+* Infrastructure storage analytics
 
 ---
 
 ## Operational Notes
 
-The implementation of Samba NAS services introduced centralized persistent storage capabilities into the `infra-ops` environment.
+The implementation of Samba NAS services introduced centralized storage capabilities into the homelab environment and established the foundation for infrastructure persistence and backup operations.
 
-This deployment established the foundation for future infrastructure backup strategies, operational data persistence, and scalable network storage services across the infrastructure platform.
+The storage platform evolved from a single-node file share into a dual-node NAS architecture supporting both primary and backup storage services.
+
+A major operational milestone included NAS mount standardization across infrastructure nodes, migration to NTFS3 storage drivers, and integration with the centralized monitoring stack.
+
+The Samba NAS platform remains a core infrastructure service supporting operational continuity, documentation management, monitoring visibility, and future disaster recovery planning across the homelab ecosystem.
