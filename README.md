@@ -67,6 +67,7 @@ The environment currently operates across two infrastructure nodes:
 | `redundant-net`      | Secondary Infrastructure Node And Resiliency Platform   |
 | `glances-monitoring` | Host-Level Monitoring And Operational Visibility        |
 | `samba-nas`          | Network Attached Storage And Infrastructure Persistence |
+| `system-maintenance` | Routine maintenance workflow, health checks, update validation, and post-reboot verification |
 
 ---
 
@@ -184,6 +185,7 @@ Operational workflows within the environment include:
 * Operational Troubleshooting Documentation
 * Configuration Standardization
 * Incremental Infrastructure Refinement
+* System Maintenance and Post-Reboot Validation
 
 ---
 
