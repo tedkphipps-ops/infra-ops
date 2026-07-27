@@ -68,6 +68,7 @@ The environment currently operates across two infrastructure nodes:
 | `glances-monitoring` | Host-Level Monitoring And Operational Visibility        |
 | `samba-nas`          | Network Attached Storage And Infrastructure Persistence |
 | `system-maintenance` | Routine maintenance workflow, health checks, update validation, and post-reboot verification |
+| `ansible`            | Infrastructure automation for maintenance checks, validation, and repeatable operations |
 
 ---
 
@@ -186,7 +187,7 @@ Operational workflows within the environment include:
 * Configuration Standardization
 * Incremental Infrastructure Refinement
 * System Maintenance and Post-Reboot Validation
-
+* Ansible Maintenance Checks
 ---
 
 ## Future Roadmap

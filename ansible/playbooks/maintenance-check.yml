@@ -1,0 +1,70 @@
+---
+- name: Run read-only maintenance checks on homelab nodes
+  hosts: homelab
+  gather_facts: true
+
+  tasks:
+    - name: Show hostname
+      ansible.builtin.command: hostname
+      register: hostname_result
+      changed_when: false
+
+    - name: Show uptime
+      ansible.builtin.command: uptime
+      register: uptime_result
+      changed_when: false
+
+    - name: Check failed systemd services
+      ansible.builtin.command: systemctl --failed --no-pager
+      register: failed_services_result
+      changed_when: false
+      failed_when: false
+
+    - name: Check disk usage
+      ansible.builtin.command: df -h
+      register: disk_usage_result
+      changed_when: false
+
+    - name: Check Docker service status
+      ansible.builtin.command: systemctl is-active docker
+      register: docker_service_result
+      changed_when: false
+      failed_when: false
+
+    - name: Check Docker containers
+      ansible.builtin.command: docker ps
+      register: docker_ps_result
+      changed_when: false
+      failed_when: false
+
+    - name: Check Chrony tracking
+      ansible.builtin.command: chronyc tracking
+      register: chrony_tracking_result
+      changed_when: false
+      failed_when: false
+
+    - name: Check Chrony sources
+      ansible.builtin.command: chronyc sources
+      register: chrony_sources_result
+      changed_when: false
+      failed_when: false
+
+    - name: Display maintenance summary
+      ansible.builtin.debug:
+        msg:
+          - "Hostname: {{ hostname_result.stdout }}"
+          - "Uptime: {{ uptime_result.stdout }}"
+          - "Failed services:"
+          - "{{ failed_services_result.stdout_lines }}"
+          - "Disk usage:"
+          - "{{ disk_usage_result.stdout_lines }}"
+          - "Docker service:"
+          - "{{ docker_service_result.stdout }}"
+          - "Docker containers:"
+          - "{{ docker_ps_result.stdout_lines }}"
+          - "Docker errors:"
+          - "{{ docker_ps_result.stderr_lines }}"
+          - "Chrony tracking:"
+          - "{{ chrony_tracking_result.stdout_lines }}"
+          - "Chrony sources:"
+          - "{{ chrony_sources_result.stdout_lines }}"
