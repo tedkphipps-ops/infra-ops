@@ -34,7 +34,7 @@ The node operates alongside `infra-hub` to provide redundancy and infrastructure
 | Node            | Role                          | Core Services                                                                                         |
 | --------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `infra-hub`     | Primary Infrastructure Node   | Pi-hole, Unbound, Samba NAS, Glances, Grafana, Prometheus, Loki, Promtail, Node Exporter, Uptime Kuma |
-| `redundant-net` | Secondary Infrastructure Node | Pi-hole, Unbound, Samba NAS, Glances, Grafana, Prometheus, Loki, Promtail, Node Exporter              |
+| `redundant-net` | Secondary Infrastructure Node | Pi-hole, Unbound, Samba NAS, Glances, Grafana, Prometheus, Loki, Promtail, Node Exporter, Uptime Kuma |
 
 ---
 
@@ -54,6 +54,7 @@ The node operates alongside `infra-hub` to provide redundancy and infrastructure
 * Promtail
 * Node Exporter
 * Glances
+* Uptime Kuma
 
 ### Storage Services
 
