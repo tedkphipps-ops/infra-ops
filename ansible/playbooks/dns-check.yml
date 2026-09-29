@@ -1,0 +1,49 @@
+---
+- name: DNS validation check
+  hosts: homelab
+  gather_facts: true
+
+  tasks:
+    - name: Show host being validated
+      ansible.builtin.debug:
+        msg: "Running DNS validation on {{ inventory_hostname }} at {{ ansible_host }}"
+
+    - name: Check Pi-hole DNS resolution on localhost port 53
+      ansible.builtin.command: dig @127.0.0.1 -p 53 example.com +short
+      register: pihole_dns_result
+      changed_when: false
+      failed_when: pihole_dns_result.rc != 0 or pihole_dns_result.stdout_lines | length == 0
+
+    - name: Show Pi-hole DNS result
+      ansible.builtin.debug:
+        msg: "Pi-hole DNS result on {{ inventory_hostname }}: {{ pihole_dns_result.stdout_lines }}"
+
+    - name: Check Unbound DNS resolution on localhost port 5335
+      ansible.builtin.command: dig @127.0.0.1 -p 5335 example.com +short
+      register: unbound_dns_result
+      changed_when: false
+      failed_when: unbound_dns_result.rc != 0 or unbound_dns_result.stdout_lines | length == 0
+
+    - name: Show Unbound DNS result
+      ansible.builtin.debug:
+        msg: "Unbound DNS result on {{ inventory_hostname }}: {{ unbound_dns_result.stdout_lines }}"
+
+    - name: Check Pi-hole service status
+      ansible.builtin.command: systemctl is-active pihole-FTL
+      register: pihole_service_status
+      changed_when: false
+      failed_when: pihole_service_status.stdout != "active"
+
+    - name: Show Pi-hole service status
+      ansible.builtin.debug:
+        msg: "Pi-hole FTL service on {{ inventory_hostname }} is {{ pihole_service_status.stdout }}"
+
+    - name: Check Unbound service status
+      ansible.builtin.command: systemctl is-active unbound
+      register: unbound_service_status
+      changed_when: false
+      failed_when: unbound_service_status.stdout != "active"
+
+    - name: Show Unbound service status
+      ansible.builtin.debug:
+        msg: "Unbound service on {{ inventory_hostname }} is {{ unbound_service_status.stdout }}"
