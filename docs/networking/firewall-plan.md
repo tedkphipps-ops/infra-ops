@@ -127,6 +127,37 @@ All other inbound access should be denied by default after required allow rules 
 
 ---
 
+### Docker and UFW Handling
+
+Docker-published ports require special handling because Docker creates its own iptables rules.
+
+Observed Docker-published services include:
+
+| Node | Port | Service |
+|---|---|---|
+| infra-hub | 3000/tcp | Grafana |
+| infra-hub | 3001/tcp | Uptime Kuma |
+| infra-hub | 3100/tcp | Loki |
+| redundant-net | 3000/tcp | Grafana |
+| redundant-net | 3001/tcp | Uptime Kuma |
+| redundant-net | 3100/tcp | Loki |
+| redundant-net | 9617/tcp | Pi-hole Exporter |
+
+Plain UFW rules may not fully restrict these Docker-published ports.
+
+The preferred firewall approach is:
+
+* Use UFW for normal host services.
+* Use Docker-aware filtering for Docker-published services.
+* Prefer `DOCKER-USER` chain rules or container bind-address changes for Docker-exposed dashboards.
+* Allow the Lenovo Command Station to reach Docker dashboards.
+* Allow required HUB/RN node-to-node monitoring.
+* Deny media, IoT, guest, and non-admin client access to Docker dashboards.
+
+No Docker/UFW firewall implementation should begin until these rules are written, reviewed, and tested one node at a time.
+
+---
+
 ## Implementation Safety Checklist
 
 Before enabling firewall rules:
