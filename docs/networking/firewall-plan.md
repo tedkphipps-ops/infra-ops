@@ -190,7 +190,7 @@ Before enabling firewall rules:
 
 ## Status
 
-`redundant-net` firewall hardening has been implemented and validated. `infra-hub` remains pending.
+`redundant-net` and `infra-hub` firewall hardening have been implemented and validated.
 
 ---
 
@@ -312,5 +312,120 @@ Final production checkpoint saved on RN at:
 
 `redundant-net` firewall hardening is implemented, validated, checkpointed, and persisted.
 
-`infra-hub` firewall hardening remains pending.
+`infra-hub` firewall hardening is implemented, validated, checkpointed, and persisted.
+
+
+---
+
+## infra-hub Firewall Implementation Record
+
+`infra-hub` firewall hardening was implemented and validated on 2026-10-10.
+
+### Management Change
+
+`infra-hub` is currently managed directly with:
+
+* `iptables`
+* `ip6tables`
+* `netfilter-persistent`
+
+During persistence setup, installing `iptables-persistent` removed `ufw`, matching the behavior observed on `redundant-net`.
+
+Rules were saved with `sudo netfilter-persistent save`.
+
+Persistent rule files:
+
+| File | Purpose |
+|---|---|
+| `/etc/iptables/rules.v4` | Persistent IPv4 rules |
+| `/etc/iptables/rules.v6` | Persistent IPv6 rules |
+
+`netfilter-persistent` is enabled.
+
+### IPv4 Host Firewall
+
+The HUB IPv4 INPUT chain allows required traffic first, then drops other inbound traffic.
+
+Current flow:
+
+1. Allow localhost.
+2. Allow established and related traffic.
+3. Allow SSH from Lenovo.
+4. Allow LAN DNS to Pi-hole.
+5. Allow Lenovo access to required host services.
+6. Allow RN access to required HUB host services.
+7. Allow DHCP replies from the current router.
+8. Drop all other inbound IPv4 traffic.
+
+Implemented allow rules:
+
+| Source | Ports | Purpose |
+|---|---|---|
+| `lo` | all | Localhost |
+| established/related | all | Existing connections |
+| `192.168.1.250` | `22/tcp` | Lenovo SSH admin |
+| `192.168.1.0/24` | `53/udp`, `53/tcp` | LAN DNS to HUB Pi-hole |
+| `192.168.1.250` | `80,443,139,445,61208,9090,9100,9617/tcp` | Lenovo host-service access |
+| `192.168.1.237` | `22,53,80,443,445,61208,9090,9100,9617/tcp` | RN-to-HUB checks |
+| `192.168.1.1` | UDP source port `67` to destination port `68` | DHCP reply safety |
+| all other IPv4 inbound | all | Drop |
+
+### Docker Firewall
+
+HUB Docker-published ports are controlled through the `DOCKER-USER` chain.
+
+Allowed sources:
+
+| Source | Ports | Purpose |
+|---|---|---|
+| `192.168.1.250` | `3000,3001,3100/tcp` | Lenovo admin to HUB Docker services |
+| `192.168.1.237` | `3000,3001,3100/tcp` | RN to HUB Docker services |
+
+Denied sources:
+
+| Source | Ports | Purpose |
+|---|---|---|
+| `192.168.1.0/24` after earlier allow matches | `3000,3001,3100/tcp` | Block non-admin LAN devices |
+
+### IPv6 Docker Firewall
+
+HUB IPv6 access to Docker dashboard ports is blocked on `eno1`.
+
+| Interface | Ports | Purpose |
+|---|---|---|
+| `eno1` | `3000,3001,3100/tcp` | Block IPv6 access to Docker dashboards |
+
+IPv6 allowlists can be added later if needed. The current management path is IPv4.
+
+### Validation
+
+Validated from Lenovo WSL:
+
+| Test | Result |
+|---|---|
+| SSH to HUB | PASS |
+| DNS query to HUB Pi-hole | PASS |
+| Pi-hole admin web | PASS |
+| Samba SMB `445/tcp` | PASS |
+| Glances `61208/tcp` | PASS |
+| Prometheus `9090/tcp` | PASS |
+| Node Exporter `9100/tcp` | PASS |
+| Pi-hole Exporter `9617/tcp` | PASS |
+| Grafana `3000/tcp` | PASS |
+| Uptime Kuma `3001/tcp` | PASS |
+| Loki `3100/tcp` | PASS |
+
+Validated from RN:
+
+| Test | Result |
+|---|---|
+| HUB Docker ports `3000,3001,3100/tcp` | PASS |
+
+`DOCKER-USER` packet counters confirmed traffic hit the Lenovo and RN allow rules.
+
+### Checkpoint
+
+Final production checkpoint saved on HUB at:
+
+`/home/ted_phipps/firewall-baselines/hub-firewall-final-checkpoint.txt`
 
