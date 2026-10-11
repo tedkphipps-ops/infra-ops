@@ -101,3 +101,40 @@ Both nodes still report the known failed service:
 
 Firewall hardening survived reboot on both nodes. Kernel updates were applied successfully. Docker services, monitoring services, DNS access, Samba access, and firewall persistence validated successfully after reboot.
 
+
+---
+
+## 2026-10-10 openipmi Service Cleanup
+
+### Summary
+
+Both core homelab nodes were showing a failed `openipmi.service` after reboot validation.
+
+The service is intended for IPMI/server hardware management. The current HUB and RN systems are laptop-based nodes and do not require local IPMI driver startup.
+
+### Action Taken
+
+On both nodes:
+
+| Node | Action |
+|---|---|
+| `infra-hub` | Disabled `openipmi.service`, masked it, and reset failed state |
+| `redundant-net` | Disabled `openipmi.service`, masked it, and reset failed state |
+
+Packages were not removed. This avoids disturbing `ipmitool` or Prometheus node exporter collector recommendations.
+
+### Validation
+
+Final Ansible maintenance check completed successfully:
+
+| Node | ok | changed | unreachable | failed |
+|---|---:|---:|---:|---:|
+| `infra-hub` | 10 | 0 | 0 | 0 |
+| `redundant-net` | 10 | 0 | 0 | 0 |
+
+Both nodes now report zero failed systemd units.
+
+### Result
+
+The known `openipmi.service` failure noise has been cleared from both nodes while preserving installed monitoring-related packages.
+
