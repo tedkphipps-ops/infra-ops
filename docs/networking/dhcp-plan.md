@@ -6,18 +6,23 @@ No production DHCP changes have been made as part of this document.
 
 ## Current State
 
-The Spectrum router currently provides DHCP for the LAN.
+The Spectrum router currently provides DHCP for normal LAN clients.
+
+Core infrastructure nodes have been moved to true static local netplan addresses before DHCP migration work.
 
 | Item | Current Value |
 |---|---|
 | Router | `REDACTED_PRIVATE_IP` |
 | LAN subnet | `REDACTED_PRIVATE_IP/24` |
-| Current DHCP provider | Spectrum router |
+| Current DHCP provider | Spectrum router for regular clients |
+| Static infrastructure nodes | HUB and RN |
 | Current DNS services | Pi-hole on HUB and RN |
 
 ## Core Infrastructure Addresses
 
-These addresses should remain stable before any DHCP migration.
+These addresses are the stable baseline before any DHCP migration.
+
+HUB and RN are configured with static local netplan addresses, not DHCP leases.
 
 | Device | Hostname / Role | IP |
 |---|---|---|
@@ -136,13 +141,13 @@ Proposed concept:
 
 Known infrastructure should stay outside normal dynamic assignment.
 
-## Known Important Reservations
+## Known Important Addresses
 
 | Device / Role | IP | Notes |
 |---|---|---|
 | Router | `REDACTED_PRIVATE_IP` | Gateway |
-| HUB | `REDACTED_PRIVATE_IP` | Core services |
-| RN | `REDACTED_PRIVATE_IP` | Redundant services |
+| HUB | `REDACTED_PRIVATE_IP` | Static local netplan address; core services |
+| RN | `REDACTED_PRIVATE_IP` | Static local netplan address; redundant services |
 | Lenovo admin workstation | `REDACTED_PRIVATE_IP` | Admin source for firewall and Ansible |
 | Brother printer | `REDACTED_PRIVATE_IP` | Known printer |
 | PlayStation 5 | `REDACTED_PRIVATE_IP` | Known device |
@@ -217,4 +222,6 @@ If migration fails:
 
 Planning only.
 
-No DHCP production changes have been made.
+HUB and RN have been moved to static local netplan addresses.
+
+No production DHCP authority migration has been made.
