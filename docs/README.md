@@ -44,6 +44,17 @@ Contents include:
 
 See: `docs/networking/README.md`
 
+### operations/
+
+Validated maintenance history and production recovery records.
+
+* [Maintenance Log](operations/maintenance-log.md)
+* [RN Pi-hole Exporter Recovery](operations/rn-exporter-recovery-2026-10-31.md)
+* [RN NAS Recovery](operations/rn-nas-recovery-2026-10-25.md)
+* [Tailscale Remote Access](operations/tailscale-remote-access.md)
+
+---
+
 ### git-cli/
 
 Git and command-line operational references.

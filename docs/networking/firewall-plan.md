@@ -308,6 +308,31 @@ Final production checkpoint saved on RN at:
 
 ---
 
+## 2026-10-31 RN Docker-to-Pi-hole API Correction
+
+RN's hardened INPUT firewall initially blocked Pi-hole Exporter from accessing the local Pi-hole API.
+
+The verified correction allows traffic from Docker's default bridge network to RN's Pi-hole API:
+
+    -A INPUT -i docker0 -s REDACTED_PRIVATE_IP/16 -d REDACTED_PRIVATE_IP/32 -p tcp -m tcp --dport 80 -j ACCEPT
+
+This rule precedes the existing INPUT DROP rule.
+
+Validation:
+
+- Docker-to-host Pi-hole API connectivity restored.
+- Pi-hole Exporter metrics returned HTTP 200.
+- Live firewall rule verified.
+- Persistent IPv4 configuration updated and backed up.
+- iptables-restore syntax validation passed.
+- netfilter-persistent confirmed enabled.
+
+Survival of this specific rule through a reboot has not yet been tested.
+
+Detailed incident record:
+[RN Pi-hole Exporter Recovery](../operations/rn-exporter-recovery-2026-10-31.md)
+
+---
 ## Updated Status
 
 `redundant-net` firewall hardening is implemented, validated, checkpointed, and persisted.

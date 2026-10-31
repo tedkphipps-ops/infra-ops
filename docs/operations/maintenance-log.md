@@ -4,6 +4,48 @@ This log records validated maintenance events for the homelab.
 
 ---
 
+## 2026-10-31 RN Performance and Pi-hole Exporter Recovery
+
+Restarted RN Pi-hole Exporter after identifying excessive memory and swap consumption.
+
+- RN RAM utilization decreased from approximately 80% to 36%.
+- Exporter process swap decreased from approximately 516 MiB to zero.
+- Identified and repaired Docker-to-host Pi-hole API firewall connectivity.
+- Saved and validated the firewall exception.
+- Confirmed exporter metrics HTTP 200.
+- Validated Pi-hole, Unbound, Samba, NAS, Docker, and monitoring services.
+- Firewall persistence after reboot remains untested.
+
+Detailed record: [RN Exporter Recovery](rn-exporter-recovery-2026-10-31.md)
+
+---
+
+## 2026-10-31 Remote Administration Validation
+
+Validated remote administration through Tailscale from ROG Zephyrus to HUB and RN.
+
+- Remote SSH access to both infrastructure nodes verified.
+- Tailscale integrated with existing host firewall management.
+- ROG configured with Git, GitHub CLI, and local infra-ops repository.
+- Lenovo WSL remains the established Ansible control environment.
+
+Detailed record: [Tailscale Remote Access](tailscale-remote-access.md)
+
+---
+
+## 2026-10-25 RN NAS Filesystem Recovery
+
+Repaired RN NAS NTFS dirty-flag issue and restored normal NTFS3 mounting.
+
+- Cleared filesystem dirty flag.
+- Removed forced mount configuration.
+- Verified read-write NTFS3 mounting and Samba access.
+- Confirmed NAS mounted during October 31 health checks.
+- Separate USB reset investigation remains unresolved.
+
+Detailed record: [RN NAS Recovery](rn-nas-recovery-2026-10-25.md)
+
+---
 ## 2026-10-12 Static IP Baseline for Core Nodes
 
 ### Summary
