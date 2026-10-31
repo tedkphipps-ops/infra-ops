@@ -1,4 +1,4 @@
-﻿# RN Pi-hole Exporter Performance Recovery
+# RN Pi-hole Exporter Performance Recovery
 
 ## October 31, 2026
 
@@ -80,7 +80,7 @@ Validation completed:
 - iptables-restore --test passed.
 - netfilter-persistent confirmed enabled.
 
-Persistence configuration was verified, but survival of this specific change through a reboot was not tested during this maintenance session.
+The firewall exception was subsequently verified present after the October 31 reboot using iptables -C. Pi-hole Exporter metrics also returned HTTP 200 after reboot.
 
 ## Final Functional Validation
 

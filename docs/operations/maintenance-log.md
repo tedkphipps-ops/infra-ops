@@ -4,6 +4,46 @@ This log records validated maintenance events for the homelab.
 
 ---
 
+## 2026-10-31 RN Crash-Kernel Memory Recovery and Reboot Validation
+
+### Summary
+
+Recovered 320 MiB of RAM on redundant-net by removing the unused crash-kernel reservation.
+
+### Changes Performed
+
+- Confirmed crash recovery was disabled (USE_KDUMP=0).
+- Purged the kdump-tools package.
+- Confirmed its GRUB configuration file was removed.
+- Regenerated GRUB using update-grub.
+- Verified the generated GRUB configuration contained no crashkernel parameter.
+- Successfully rebooted RN remotely over Tailscale.
+
+### Post-Reboot Validation
+
+- Crash-kernel reservation: 0 bytes.
+- Total usable RAM: approximately 3.3 GiB.
+- Swap usage immediately after reboot: 0 bytes.
+- Remote SSH access: PASS.
+- Pi-hole FTL: active.
+- Unbound: active.
+- Samba: active.
+- Docker: active.
+- netfilter-persistent: active.
+- RN NAS: mounted.
+- Pi-hole Exporter metrics: HTTP 200.
+- Docker-to-Pi-hole firewall exception: PRESENT after reboot.
+
+### Result
+
+The unused 320 MiB crash-kernel reservation was successfully eliminated.
+
+RN rebooted successfully, essential services remained operational, and the previously saved Docker-to-Pi-hole firewall correction survived the reboot.
+
+No additional packages were removed with apt autoremove.
+
+---
+
 ## 2026-10-31 RN Performance and Pi-hole Exporter Recovery
 
 Restarted RN Pi-hole Exporter after identifying excessive memory and swap consumption.
@@ -14,7 +54,7 @@ Restarted RN Pi-hole Exporter after identifying excessive memory and swap consum
 - Saved and validated the firewall exception.
 - Confirmed exporter metrics HTTP 200.
 - Validated Pi-hole, Unbound, Samba, NAS, Docker, and monitoring services.
-- Firewall persistence after reboot remains untested.
+- Firewall exception survived the October 31 reboot; verified with iptables -C.
 
 Detailed record: [RN Exporter Recovery](rn-exporter-recovery-2026-10-31.md)
 

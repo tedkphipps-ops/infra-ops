@@ -327,7 +327,7 @@ Validation:
 - iptables-restore syntax validation passed.
 - netfilter-persistent confirmed enabled.
 
-Survival of this specific rule through a reboot has not yet been tested.
+The firewall exception survived the October 31 reboot. Its presence was verified with iptables -C, and Pi-hole Exporter metrics returned HTTP 200.
 
 Detailed incident record:
 [RN Pi-hole Exporter Recovery](../operations/rn-exporter-recovery-2026-10-31.md)
