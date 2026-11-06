@@ -213,6 +213,17 @@ The goal is not only to deploy services, but to build, validate, document, monit
 
 ---
 
+## Repository Security Audit
+
+Completed a security-focused review of the public infrastructure
+repository, including automated Git history maintenance, Python
+image processing, configuration protection, and integrity validation.
+
+See the [Public Repository Security Audit](docs/security/repository-security-audit.md)
+for the project case study and technical lessons.
+
+---
+
 ## Maintainer
 
 **Ted Phipps**
