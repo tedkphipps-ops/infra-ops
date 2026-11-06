@@ -1,227 +1,186 @@
-# DHCP Migration Plan
+# Homelab DHCP Migration Plan
 
-This document plans a future DHCP migration for the homelab network.
+## Overview
 
-No production DHCP changes have been made as part of this document.
+This document outlines a proposed migration from router-managed
+DHCP to homelab-managed DHCP services.
 
-## Current State
+The migration has not been implemented.
 
-The Spectrum router currently provides DHCP for normal LAN clients.
+The objective is to improve DHCP management, DNS integration,
+device consistency, and future infrastructure redundancy.
 
-Core infrastructure nodes have been moved to true static local netplan addresses before DHCP migration work.
+Actual network assignments and device inventories remain private.
 
-| Item | Current Value |
-|---|---|
-| Router | `REDACTED_PRIVATE_IP` |
-| LAN subnet | `REDACTED_PRIVATE_IP/24` |
-| Current DHCP provider | Spectrum router for regular clients |
-| Static infrastructure nodes | HUB and RN |
-| Current DNS services | Pi-hole on HUB and RN |
+## Current Infrastructure
 
-## Core Infrastructure Addresses
+The current environment includes:
 
-These addresses are the stable baseline before any DHCP migration.
+- Router-managed DHCP for regular network clients
+- Two Linux infrastructure nodes with static netplan addresses
+- Pi-hole DNS services on both infrastructure nodes
+- Existing host firewall protections
+- Monitoring and infrastructure validation services
 
-HUB and RN are configured with static local netplan addresses, not DHCP leases.
+The infrastructure nodes do not depend on DHCP leases
+for their primary network addresses.
 
-| Device | Hostname / Role | IP |
-|---|---|---|
-| Router | Spectrum router | `REDACTED_PRIVATE_IP` |
-| HUB | `infra-hub` | `REDACTED_PRIVATE_IP` |
-| RN | `redundant-net` | `REDACTED_PRIVATE_IP` |
-| Lenovo | WSL/admin workstation host | `REDACTED_PRIVATE_IP` |
+## Migration Objectives
 
-## Migration Goal
+- Centralize management of DHCP reservations
+- Integrate client naming with Pi-hole DNS
+- Improve network troubleshooting
+- Support predictable infrastructure addressing
+- Develop a reliable recovery and redundancy strategy
+- Preserve compatibility with existing services
 
-Move DHCP control away from the Spectrum router and into homelab-managed infrastructure.
+Detailed device mappings and address allocations are
+maintained in private operational documentation.
 
-Primary goals:
-
-| Goal | Reason |
-|---|---|
-| Controlled DHCP reservations | Keep important devices predictable |
-| DNS integration | Hand out Pi-hole DNS cleanly |
-| Better documentation | Track device identity and IP intent |
-| Easier troubleshooting | Keep network state visible in the infra repo |
-| Future redundancy | Reduce dependence on one unmanaged router feature set |
-
-## Candidate DHCP Approaches
+## Candidate DHCP Solutions
 
 ### Option 1: Pi-hole DHCP
 
-Pi-hole DHCP is the simplest candidate because Pi-hole is already deployed on both HUB and RN.
+Advantages:
 
-Potential benefits:
+- Integrates with the existing DNS infrastructure
+- Provides a familiar management interface
+- Requires minimal additional infrastructure
 
-| Benefit | Notes |
-|---|---|
-| Simple UI | DHCP can be managed from Pi-hole admin |
-| DNS integration | DHCP clients can register names with Pi-hole |
-| Existing service | No new DHCP package required if Pi-hole DHCP is suitable |
+Considerations:
 
-Concerns to validate:
-
-| Concern | Notes |
-|---|---|
-| Redundancy | Need to avoid two active DHCP servers handing out conflicting leases |
-| Backup behavior | Need a safe failover plan if HUB is down |
-| Config sync | Need to understand how DHCP reservations are stored and backed up |
+- Backup and configuration management
+- DHCP lease and reservation handling
+- Safe recovery if the primary node becomes unavailable
+- Avoiding conflicting DHCP servers
 
 ### Option 2: Kea DHCP
 
-Kea is a modern DHCP server option.
+Advantages:
 
-Potential benefits:
+- Dedicated DHCP service
+- Flexible configuration management
+- Potential for advanced redundancy designs
+- Suitable for future automation
 
-| Benefit | Notes |
-|---|---|
-| Purpose-built DHCP | More advanced DHCP service than Pi-hole UI |
-| Automation-friendly | Better long-term config-as-code option |
-| Possible HA options | Worth researching before implementation |
+Considerations:
 
-Concerns to validate:
+- Additional service complexity
+- Firewall and network integration
+- Configuration management requirements
+- High-availability design and testing
 
-| Concern | Notes |
-|---|---|
-| More complexity | More moving parts than Pi-hole DHCP |
-| Requires new service | Adds another component to maintain |
-| Needs careful firewall rules | DHCP traffic must be explicitly allowed |
+### Option 3: ISC DHCP Server
 
-### Option 3: isc-dhcp-server
+A traditional Linux DHCP implementation.
 
-Traditional Linux DHCP server.
+Considerations:
 
-Potential benefits:
-
-| Benefit | Notes |
-|---|---|
-| Familiar | Common Linux DHCP implementation |
-| Simple static config | Reservations can be tracked in config files |
-
-Concerns to validate:
-
-| Concern | Notes |
-|---|---|
-| Older path | May not be the best long-term choice |
-| Manual management | Less integrated with current Pi-hole setup |
-| HA planning needed | Redundancy still needs design work |
+- Familiar configuration-based management
+- Legacy software lifecycle
+- Limited suitability for new long-term deployments
+- Separate redundancy planning
 
 ## Preferred Initial Direction
 
-Preferred first candidate for lab evaluation:
+Pi-hole DHCP is the initial candidate for evaluation
+because Pi-hole is already deployed.
 
-| Choice | Reason |
-|---|---|
-| Pi-hole DHCP on HUB | Lowest-complexity first step because Pi-hole is already deployed |
+A primary DHCP service could run on the primary
+infrastructure node.
 
-RN should not be enabled as a second active DHCP server without a clear failover design.
+The secondary node could support a future recovery
+or redundancy strategy.
 
-## Proposed Future State
+A second DHCP server must not be enabled without
+a validated design that prevents conflicting leases.
 
-Initial target:
+## Network Planning
 
-| Role | Node | Notes |
-|---|---|---|
-| Primary DHCP | HUB / `infra-hub` | Main DHCP service |
-| DNS | HUB and RN Pi-hole | DHCP clients should receive Pi-hole DNS |
-| Failover / backup | RN / `redundant-net` | Planned but not enabled until safe design exists |
-| Router | Spectrum router | Gateway only, DHCP disabled after migration |
+The final DHCP configuration must define:
 
-## Draft DHCP Scope
+- Appropriate dynamic address pool
+- Reserved and statically assigned addresses
+- Gateway and DNS information
+- Lease duration and renewal behavior
+- Reservation and device naming conventions
+- Backup and recovery procedures
 
-Exact pool must be verified before implementation.
+Exact address ranges, subnets, and device assignments
+are deliberately excluded from this public document.
 
-Proposed concept:
+## Firewall Requirements
 
-| Range | Purpose |
-|---|---|
-| `REDACTED_PRIVATE_IP` - `REDACTED_PRIVATE_IP` | General dynamic clients |
-| `REDACTED_PRIVATE_IP` - `REDACTED_PRIVATE_IP` | Smart TVs, phones, IoT, general reservations |
-| `REDACTED_PRIVATE_IP` - `REDACTED_PRIVATE_IP` | Infrastructure, admin, known fixed/reserved devices |
+DHCP relies on UDP ports 67 and 68.
 
-Known infrastructure should stay outside normal dynamic assignment.
+Migration planning must account for:
 
-## Known Important Addresses
+- DHCP discovery and broadcast traffic
+- Server-to-client responses
+- Existing host firewall restrictions
+- Required router configuration changes
+- DNS and Docker networking dependencies
 
-| Device / Role | IP | Notes |
-|---|---|---|
-| Router | `REDACTED_PRIVATE_IP` | Gateway |
-| HUB | `REDACTED_PRIVATE_IP` | Static local netplan address; core services |
-| RN | `REDACTED_PRIVATE_IP` | Static local netplan address; redundant services |
-| Lenovo admin workstation | `REDACTED_PRIVATE_IP` | Admin source for firewall and Ansible |
-| Brother printer | `REDACTED_PRIVATE_IP` | Known printer |
-| PlayStation 5 | `REDACTED_PRIVATE_IP` | Known device |
-| Smart frame | `REDACTED_PRIVATE_IP` | Known device |
-| Insignia Roku TV | `REDACTED_PRIVATE_IP` | Known Roku device |
-| Little TV Roku | `REDACTED_PRIVATE_IP` | Known Roku device |
-| Hisense Roku TV | `REDACTED_PRIVATE_IP` | Known Roku device |
-
-## Firewall Considerations
-
-Current firewall rules allow DHCP replies from the current router.
-
-Before changing DHCP providers, firewall rules must be reviewed and updated.
-
-Items to validate:
-
-| Item | Requirement |
-|---|---|
-| DHCP server traffic | UDP `67/68` must work correctly |
-| Client broadcasts | DHCP discovery must reach the DHCP server |
-| Router DHCP rule | Existing router DHCP safety rule may need adjustment |
-| HUB/RN firewall | DHCP service must not be blocked locally |
-| Docker interaction | DHCP should not conflict with Docker networking |
+Firewall changes must be tested before migration.
 
 ## Pre-Migration Checklist
 
-Before disabling DHCP on the router:
+- Capture the existing DHCP configuration
+- Inventory current reservations privately
+- Verify static infrastructure addressing
+- Evaluate the selected DHCP solution
+- Back up relevant service configurations
+- Review firewall requirements
+- Select an appropriate maintenance window
+- Prepare and verify a rollback procedure
 
-| Check | Status |
-|---|---|
-| Current router DHCP settings captured | Pending |
-| Current DHCP range captured | Pending |
-| Current reservations captured | Pending |
-| Pi-hole DHCP capability inspected | Pending |
-| HUB/RN Pi-hole config backed up | Pending |
-| Firewall DHCP rules reviewed | Pending |
-| Rollback plan written | Pending |
-| Maintenance window chosen | Pending |
+## Proposed Migration Procedure
 
-## Migration Draft Steps
+1. Back up existing DHCP and DNS configurations.
+2. Confirm the final DHCP design and address pool.
+3. Prepare the new DHCP service without enabling it.
+4. Review firewall and network dependencies.
+5. Prepare the router DHCP shutdown.
+6. Enable the selected DHCP provider during maintenance.
+7. Renew DHCP on a test client.
+8. Confirm correct gateway and DNS assignment.
+9. Verify internet connectivity and DNS resolution.
+10. Confirm reservations and important client connectivity.
+11. Validate monitoring and infrastructure services.
+12. Document the verified operational outcome privately.
+13. Publish a sanitized implementation summary.
 
-Do not run these until the plan is validated.
+These steps are planning guidance and must be reviewed
+before any production execution.
 
-1. Capture router DHCP settings and screenshots.
-2. Export or document existing DHCP reservations.
-3. Back up HUB and RN Pi-hole configuration.
-4. Decide DHCP provider and lease range.
-5. Configure DHCP on chosen provider but do not enable yet.
-6. Update firewall rules if needed.
-7. Disable DHCP on Spectrum router.
-8. Enable DHCP on chosen homelab provider.
-9. Renew DHCP on a test client.
-10. Confirm client receives correct gateway and DNS.
-11. Confirm internet access.
-12. Confirm Pi-hole query visibility.
-13. Confirm important devices retain expected IPs.
-14. Document final configuration.
-15. Commit and push documentation.
+## Rollback Procedure
 
-## Rollback Plan
+If migration validation fails:
 
-If migration fails:
+1. Disable the newly enabled DHCP service.
+2. Restore the previous DHCP provider.
+3. Renew leases on affected test clients.
+4. Verify gateway and DNS assignment.
+5. Confirm internet and internal service connectivity.
+6. Restore previous firewall configuration if necessary.
+7. Record the failure and required corrective actions.
 
-1. Disable homelab DHCP service.
-2. Re-enable DHCP on Spectrum router.
-3. Reboot or renew DHCP on affected clients.
-4. Confirm clients receive router DHCP leases again.
-5. Confirm DNS and internet access.
-6. Restore previous firewall rules if they were changed.
+Avoid leaving conflicting DHCP authorities active.
 
 ## Current Status
 
-Planning only.
+DHCP migration remains in the planning phase.
 
-HUB and RN have been moved to static local netplan addresses.
+Both infrastructure nodes have static local addresses.
 
-No production DHCP authority migration has been made.
+The existing router remains responsible for DHCP.
+
+No production DHCP migration has been performed.
+
+## Documentation Security
+
+Operational addressing, device mappings, MAC addresses,
+reservations, and router configuration remain private.
+
+See docs/security/public-repository-policy.md for
+the public repository security requirements.

@@ -1,110 +1,151 @@
-# RN Pi-hole Exporter Performance Recovery
+# Pi-hole Exporter Performance and Connectivity Recovery
 
-## October 31, 2026
+## Incident Date
 
-### System
+October 31, 2026
 
-- Host: redundant-net
-- Address: REDACTED_PRIVATE_IP
-- Docker container: pihole-exporter
-- Image at time of repair: ekofr/pihole-exporter:latest
+## Overview
 
-## Incident
+A secondary Linux infrastructure node experienced
+significant memory pressure, excessive swapping,
+and intermittent disk I/O delays.
 
-RN experienced sustained memory pressure, excessive swapping, and high CPU I/O wait.
+Investigation identified two separate problems:
 
-Observed symptoms included:
+1. Excessive Pi-hole Exporter resource consumption.
+2. Blocked Docker-to-host API connectivity.
 
-- RAM consumption approximately 73-80%.
-- Pi-hole Exporter process RSS approximately 233 MiB.
-- Pi-hole Exporter process swap approximately 516 MiB.
-- CPU I/O wait periodically approaching 90%.
-- Slow I/O involving RN's mechanical system HDD.
+Both problems were addressed and functionality restored.
 
-## Performance Recovery
+## Performance Investigation
 
-The Pi-hole Exporter container was restarted using:
+### Initial Observations
+
+- Host RAM utilization: approximately 73-80%.
+- Exporter resident memory: approximately 233 MiB.
+- Exporter swap consumption: approximately 516 MiB.
+- CPU I/O wait periodically approached 90%.
+- The system used a mechanical hard drive.
+
+These conditions degraded infrastructure responsiveness.
+
+### Immediate Recovery
+
+The affected Docker container was restarted.
+
+Historical command:
 
     docker restart pihole-exporter
 
-Immediately afterward:
+### Results
 
-- Container status: running.
-- Exporter RSS: approximately 14.2 MiB.
-- Exporter swap: 0 MiB.
-- Glances RAM utilization: approximately 36%.
-- CPU I/O wait subsequently observed below 1%.
+- Container returned to running status.
+- Exporter resident memory decreased to about 14.2 MiB.
+- Exporter swap consumption decreased to zero.
+- Host RAM utilization decreased to approximately 36%.
+- CPU I/O wait subsequently dropped below 1%.
 
-RAM utilization remained below 40% during the following day's observation.
+RAM utilization remained below 40% during
+the following observation period.
 
-The restart relieved the immediate resource pressure. Long-term memory stability was not established by this observation alone.
+The restart resolved the immediate resource pressure.
 
-## Exporter Connectivity Repair
+However, the underlying cause of the exporter's
+previous memory growth was not conclusively identified.
 
-After restarting, the exporter could not complete requests to the RN Pi-hole API.
+## Docker Connectivity Investigation
 
-Logs showed repeated timeouts contacting:
+### Symptoms
 
-    http://REDACTED_PRIVATE_IP:80/api/auth
+Following the restart, the exporter experienced
+timeouts when requesting data from the Pi-hole API.
 
-Testing confirmed:
+Testing established that:
 
-- RN host to Pi-hole API: HTTP 400, reachable.
-- Exporter network namespace to Pi-hole API: connection timeout.
-- Cause of connectivity failure: Docker-to-host traffic was not permitted by RN's INPUT firewall allowlist.
+- The host could reach the application API.
+- The exporter container could not reach the same API.
+- The container used Docker bridge networking.
+- The host INPUT firewall blocked the required traffic.
 
-The exporter was connected to Docker's default bridge network.
+This isolated the connectivity failure to the
+container-to-host network path.
 
-A targeted IPv4 firewall exception was installed:
+### Resolution
 
-    -A INPUT -i docker0 -s REDACTED_PRIVATE_IP/16 -d REDACTED_PRIVATE_IP/32 -p tcp -m tcp --dport 80 -j ACCEPT
+A narrowly scoped IPv4 firewall exception was
+introduced for the required application traffic.
 
-The exception precedes the existing INPUT DROP rule.
+The exception was positioned before the existing
+inbound DROP rule.
 
-This permits containers on the default Docker bridge to reach RN's local Pi-hole API on TCP port 80. It does not grant unrestricted inbound LAN access.
+The broader firewall restrictions remained in place.
+
+Actual source addresses, destination addresses,
+and operational firewall rules remain private.
 
 ## Firewall Persistence
 
-The verified exception was added to:
+The correction was incorporated into the persistent
+firewall configuration.
 
-    /etc/iptables/rules.v4
+Validation included:
 
-A backup was created:
+- Live firewall rule inspection.
+- Firewall packet counter verification.
+- Saved rule ordering inspection.
+- Successful iptables-restore syntax validation.
+- Confirmation that netfilter-persistent was enabled.
 
-    /etc/iptables/rules.v4.rn-exporter-backup
+The exception was also verified after reboot.
 
-Validation completed:
+## Functional Validation
 
-- Live firewall exception verified with packet counters.
-- Saved exception verified immediately before INPUT DROP.
-- iptables-restore --test passed.
-- netfilter-persistent confirmed enabled.
+After restoring connectivity:
 
-The firewall exception was subsequently verified present after the October 31 reboot using iptables -C. Pi-hole Exporter metrics also returned HTTP 200 after reboot.
+- Pi-hole API communication succeeded.
+- Pi-hole Exporter metrics returned HTTP 200.
+- Docker remained operational.
+- DNS services remained active.
+- Samba storage services remained operational.
+- The NAS filesystem remained mounted.
+- Grafana and related monitoring services remained active.
+- Availability monitoring remained healthy.
 
-## Final Functional Validation
+The exporter metrics endpoint returned HTTP 200
+during the final connectivity validation.
 
-After connectivity was restored, Pi-hole Exporter was restarted again.
+## Outcome
 
-The metrics endpoint returned:
+The immediate performance degradation was reduced,
+and Pi-hole Exporter functionality was restored.
 
-    HTTP 200 in approximately 0.259 seconds
+The Docker-to-host firewall correction was validated,
+persisted, and verified following a reboot.
 
-The October 31 RN health check confirmed:
+No exporter software upgrade was performed
+during this recovery.
 
-- pihole-FTL: active
-- unbound: active
-- smbd: active
-- docker: active
-- /mnt/rn-nas: mounted
-- Pi-hole Exporter: HTTP 200
-- Uptime Kuma: healthy
-- Grafana: running
-- Promtail: running
-- Loki: running
+Long-term exporter memory stability requires
+continued observation because the original
+memory-growth mechanism was not established.
 
-## Result
+## Lessons Learned
 
-RN's immediate performance degradation was substantially reduced, Pi-hole Exporter metrics were restored, and the firewall correction was saved and validated.
+- Container health depends on both resource usage
+  and network connectivity.
+- Host connectivity does not guarantee that a
+  container can reach the same destination.
+- Firewall hardening must account for Docker
+  bridge and container-to-host traffic.
+- Persistent firewall changes require validation.
+- Reboot testing confirms configuration persistence.
+- Short-term recovery does not establish root cause.
 
-The precise cause of the exporter's prior memory growth was not conclusively established. No exporter software upgrade was performed during this repair.
+## Documentation Security
+
+Operational IP addresses, firewall exceptions,
+private network configuration, and access details
+are intentionally excluded.
+
+See docs/security/public-repository-policy.md
+for publication requirements.

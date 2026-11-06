@@ -1,94 +1,60 @@
-﻿# Tailscale Remote Homelab Access
+# Tailscale Remote Administration
 
 ## Overview
 
-Tailscale provides secure remote network connectivity between the ROG Zephyrus workstation and both infrastructure nodes.
+The homelab uses Tailscale private overlay networking
+for authenticated remote administration over SSH.
 
-This allows remote administration while away from the home LAN without exposing SSH directly through the Spectrum router.
+This allows infrastructure maintenance without publishing
+operational connection information.
 
-## Connected Systems
+## Architecture
 
-| Device | Role | Tailscale Address |
-|---|---|---|
-| infra-hub | Primary infrastructure node | REDACTED_PRIVATE_IP |
-| redundant-net | Secondary infrastructure node | REDACTED_PRIVATE_IP |
-| rog-zephyrus | Remote administration workstation | REDACTED_PRIVATE_IP |
+The remote administration design includes:
 
-## Remote Administration
+- Tailscale private overlay networking
+- Authenticated administrative connections
+- Host-level access controls
+- Separate management and service responsibilities
+- Controlled access to infrastructure nodes
 
-The ROG runs Windows PowerShell with OpenSSH for Windows.
+Actual connection details are maintained privately.
 
-Local Windows account:
+## Security Principles
 
-    local_user
+Remote administration follows these requirements:
 
-Remote Linux SSH account on HUB and RN:
+- No credentials or private keys in public repositories
+- No published operational IP addresses
+- No exposed account or device identities
+- No published firewall exceptions or access rules
+- Authentication and authorization remain independent
+- Configuration changes require access validation
 
-    your_ssh_username
+## Validation
 
-The ROG uses a dedicated passphrase-protected Ed25519 SSH key for homelab access.
+Remote administrative connectivity has previously been
+validated against both infrastructure nodes.
 
-The private key and its passphrase must never be committed to GitHub.
+Historical validation also included service availability
+and infrastructure health checks.
 
-## Validated Access
+These results represent completed testing rather than
+a guarantee of current availability.
 
-Remote SSH connectivity from ROG to both HUB and RN was successfully tested over Tailscale while away from the home network.
+## Operational Maintenance
 
-Example remote connection:
+Remote-access changes must be tested before a
+maintenance session is considered complete.
 
-    ssh your_ssh_username@REDACTED_PRIVATE_IP
+Operational settings, authentication configuration,
+and troubleshooting logs remain private.
 
-The connection uses the existing Linux OpenSSH service reached through Tailscale networking.
+## Documentation Security
 
-Tailscale connectivity does not replace SSH key authentication or Linux account permissions.
+This document intentionally excludes actual network
+topology, connection commands, account information,
+and security configuration.
 
-## Firewall Integration
-
-Tailscale was integrated with the existing host firewall hardening on HUB and RN.
-
-The nodes were configured with Tailscale netfilter management disabled:
-
-    netfilter-mode=off
-
-This preserves manual responsibility for firewall access rules through iptables and netfilter-persistent.
-
-Remote access requires the appropriate host firewall exceptions.
-
-Firewall changes must preserve both remote management and the existing LAN security restrictions.
-
-## ROG GitHub Workstation
-
-The ROG also has:
-
-- Git for Windows
-- GitHub CLI
-- Authenticated access to tedkphipps-ops
-- Local clone of tedkphipps-ops/infra-ops
-
-Git author identity:
-
-    Ted Phipps <REDACTED_EMAIL>
-
-Local repository:
-
-    C:\Users\local_user\infra-ops
-
-This provides a second workstation for infrastructure documentation and Git operations.
-
-## Validation Status
-
-- Tailscale connectivity between ROG, HUB, and RN: verified
-- Remote OpenSSH access to HUB: verified
-- Remote OpenSSH access to RN: verified
-- Remote RN maintenance and service checks: verified October 31, 2026
-- GitHub repository cloned on ROG: verified October 31, 2026
-
-## Operational Notes
-
-Lenovo WSL remains the established Ansible control environment.
-
-The ROG provides an additional remote administration and documentation workstation.
-
-Do not assume the ROG has an identical Ansible environment to Lenovo.
-
-After changing Tailscale, SSH, or firewall settings, validate remote access before ending the maintenance session.
+Refer to docs/security/public-repository-policy.md
+for publication requirements.

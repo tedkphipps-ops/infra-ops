@@ -1,410 +1,199 @@
-# Monitoring Documentation
+# Homelab Monitoring and Observability
 
 ## Overview
 
-This directory documents the monitoring and observability stack used in the `infra-ops` homelab environment.
-
-The monitoring ecosystem provides visibility into host health, DNS activity, service availability, logs, metrics, storage usage, and infrastructure uptime across both primary and secondary infrastructure nodes.
+The homelab uses a multi-service monitoring platform to
+provide visibility into two Linux infrastructure nodes.
 
-The environment currently includes monitoring coverage for:
+Monitoring covers system health, DNS, storage, containers,
+logs, performance metrics, and service availability.
 
-* `infra-hub`
-* `redundant-net`
-* DNS services
-* NAS storage
-* Docker containers
-* Host-level system health
-* Service availability
-* Logs and metrics
-* Uptime and availability checks
+The architecture includes redundant availability monitoring
+to improve visibility during infrastructure failures.
 
----
+## Monitoring Technology
 
-## Monitoring Stack
+| Component        | Function                        |
+| ---------------- | ------------------------------- |
+| Grafana          | Dashboards and visualization    |
+| Prometheus       | Metrics collection and storage  |
+| Loki             | Centralized log aggregation     |
+| Promtail         | System and service log shipping |
+| Node Exporter    | Linux host metrics              |
+| Pi-hole Exporter | DNS service metrics             |
+| Uptime Kuma      | Availability monitoring         |
+| Glances          | Real-time system monitoring     |
 
-The monitoring ecosystem currently consists of:
+## Infrastructure Architecture
 
-* Grafana
-* Prometheus
-* Loki
-* Promtail
-* Node Exporter
-* Pi-hole Exporter
-* Uptime Kuma
-* Glances
+The environment uses two infrastructure nodes.
 
----
+### Primary Node — `infra-hub`
 
-## Monitoring Roles
+Provides core infrastructure services, monitoring
+dashboards, metrics collection, logging, and
+availability monitoring.
 
-| Service | Role |
-| --- | --- |
-| Grafana | Dashboard visualization |
-| Prometheus | Metrics collection |
-| Loki | Log aggregation |
-| Promtail | Log shipping |
-| Node Exporter | Host metrics exporter |
-| Pi-hole Exporter | Pi-hole metrics exporter |
-| Uptime Kuma | Service availability monitoring |
-| Glances | Host-level monitoring dashboard |
+### Secondary Node — `redundant-net`
 
----
+Provides supporting infrastructure services,
+redundant monitoring, and additional observability.
 
-## Infrastructure Nodes
+Both nodes participate in infrastructure health
+and availability monitoring.
 
-### infra-hub
+Actual server addresses and connection information
+are maintained privately.
 
-`infra-hub` is the primary infrastructure node.
+## Metrics Architecture
 
-Services monitored:
+Prometheus collects metrics from configured exporters.
 
-* Pi-hole
-* Unbound
-* Samba NAS
-* Grafana
-* Prometheus
-* Loki
-* Promtail
-* Node Exporter
-* Pi-hole Exporter
-* Glances
-* Uptime Kuma
+The basic metrics pipeline is:
 
-### redundant-net
+    Linux hosts --> Node Exporter --> Prometheus
+    DNS services --> Pi-hole Exporter --> Prometheus
+    Prometheus --> Grafana dashboards
 
-`redundant-net` is the secondary infrastructure node.
+Monitored metrics include:
 
-Services monitored:
+- CPU and memory utilization
+- System load and uptime
+- Filesystem and storage capacity
+- Network activity
+- DNS queries and blocking activity
+- Infrastructure performance trends
 
-* Pi-hole
-* Unbound
-* Samba NAS
-* Grafana
-* Prometheus
-* Loki
-* Promtail
-* Node Exporter
-* Pi-hole Exporter
-* Glances
-* Uptime Kuma
+## Centralized Logging
 
----
+Promtail collects configured system and service logs.
 
-## Grafana
+The logging pipeline is:
 
-Grafana provides dashboard visibility for infrastructure monitoring data.
+    System logs --> Promtail --> Loki --> Grafana
 
-Grafana is used to visualize:
+Loki provides log storage and querying.
 
-* CPU utilization
-* Memory utilization
-* Disk usage
-* NAS storage usage
-* Pi-hole DNS metrics
-* Prometheus metrics
-* Loki log data
-* Service and host health
+Grafana allows operators to investigate service
+behavior alongside infrastructure metrics.
 
-Grafana dashboards are available on both infrastructure nodes.
+## Grafana Dashboards
 
-| Node | URL | Role |
-| --- | --- | --- |
-| `infra-hub` | `http://REDACTED_PRIVATE_IP:3000` | Primary Grafana dashboard |
-| `redundant-net` | `http://REDACTED_PRIVATE_IP:3000` | Secondary Grafana dashboard |
+Grafana dashboards provide visibility into:
 
----
+- Host resource utilization
+- Storage and NAS health
+- DNS performance
+- Container and service health
+- Metrics collection
+- System and service logs
 
-## Prometheus
+Dashboard URLs, credentials, and operational
+data-source configuration remain private.
 
-Prometheus collects infrastructure metrics from exporters and monitored services.
+## Redundant Availability Monitoring
 
-Prometheus is used to collect metrics from:
+Uptime Kuma is deployed on both infrastructure nodes.
 
-* Node Exporter
-* Pi-hole Exporter
-* Prometheus itself
-* Loki-related monitoring targets where applicable
+Each instance monitors critical infrastructure services,
+and both instances monitor each other.
 
-Prometheus supports Grafana dashboards by providing metrics for system health, DNS visibility, storage utilization, and infrastructure trend analysis.
+Monitoring categories include:
 
----
+- Infrastructure availability
+- DNS services
+- Monitoring services
+- Storage availability
 
-## Loki
+Peripheral devices are excluded when their
+availability data creates unnecessary monitoring noise.
 
-Loki provides log aggregation for the monitoring stack.
+### Historical Validation
 
-Loki stores and serves log data that can be queried and visualized through Grafana.
+On October 31, 2026, both monitoring instances
+had a verified baseline of:
 
-In this environment:
+| Instance              | Up  | Down |
+| --------------------- | --- | ---- |
+| Primary Uptime Kuma   | 13  | 0    |
+| Secondary Uptime Kuma | 13  | 0    |
 
-* Loki acts as the log backend.
-* Promtail ships logs into Loki.
-* Grafana displays log data from Loki.
+These values represent historical validation,
+not current live monitoring status.
 
-Loki is monitored as part of the infrastructure monitoring stack because log visibility is important for troubleshooting service failures and system behavior.
+## Host-Level Monitoring
 
----
+Glances provides real-time operational visibility.
 
-## Promtail
+Node Exporter provides host metrics for Prometheus.
 
-Promtail collects and ships logs to Loki.
+Together, these tools support investigation of:
 
-Promtail supports log visibility by forwarding system and service logs into the logging pipeline.
+- CPU and memory pressure
+- Disk capacity and utilization
+- Storage availability
+- Network activity
+- Running processes
+- Host uptime and resource trends
 
-The basic log flow is:
+## Operational Validation
 
-```text
-System / Service Logs -> Promtail -> Loki -> Grafana
-```
+Monitoring maintenance includes:
 
----
+- Verifying collection services
+- Checking exporter availability
+- Reviewing dashboard data
+- Confirming logging pipeline functionality
+- Validating storage availability
+- Checking container health
+- Reviewing redundant monitoring coverage
 
-## Node Exporter
+Ansible provides repeatable infrastructure
+maintenance and validation checks.
 
-Node Exporter provides host-level metrics to Prometheus.
+## Troubleshooting and Recovery
 
-Metrics include:
+The monitoring platform has supported troubleshooting
+of resource pressure, storage availability,
+and container networking problems.
 
-* CPU usage
-* Memory usage
-* Disk usage
-* Filesystem data
-* Network statistics
-* System load
-* Host uptime
+A documented October 2026 recovery restored
+exporter connectivity after a firewall restriction
+blocked required container-to-host communication.
 
-Node Exporter is part of the metrics collection layer for both `infra-hub` and `redundant-net`.
+Validation confirmed restored metrics collection
+and persistent firewall configuration.
 
----
+See [RN Pi-hole Exporter Recovery](../operations/rn-exporter-recovery-2026-10-31.md)
+for the documented incident, corrective action, and validation.
 
-## Pi-hole Exporter
+Sensitive connection details remain private.
 
-Pi-hole Exporter exposes Pi-hole metrics for Prometheus and Grafana.
+## Screenshots and Evidence
 
-It supports DNS visibility by exporting data such as:
+Sanitized monitoring screenshots may be published
+to demonstrate dashboards and validation results.
 
-* Query counts
-* Blocked queries
-* Allowed queries
-* DNS activity trends
-* Pi-hole service metrics
+Screenshots must be reviewed for addresses,
+identifiers, private URLs, and other sensitive data.
 
-Pi-hole Exporter allows Pi-hole activity to be included in Grafana dashboards.
-
----
-
-## Glances
-
-Glances provides host-level monitoring through a web dashboard.
-
-Glances is useful for quick operational review of:
-
-* CPU usage
-* Memory usage
-* Disk usage
-* Network activity
-* Processes
-* System load
-* Temperatures
-* Host status
-
-Glances dashboards are available on both infrastructure nodes.
-
-| Node | URL | Role |
-| --- | --- | --- |
-| `infra-hub` | `http://REDACTED_PRIVATE_IP:61208` | Primary host monitoring dashboard |
-| `redundant-net` | `http://REDACTED_PRIVATE_IP:61208` | Secondary host monitoring dashboard |
-
----
-
-## Uptime Kuma
-
-Uptime Kuma is deployed on both infrastructure nodes to provide redundant availability monitoring for the homelab environment.
-
-The primary Uptime Kuma dashboard runs on `infra-hub`.
-
-The secondary Uptime Kuma dashboard runs on `redundant-net`.
-
-Each dashboard monitors core infrastructure services, and both dashboards monitor each other to improve troubleshooting visibility if one infrastructure node becomes unavailable.
-
-| Node | URL | Role |
-| --- | --- | --- |
-| `infra-hub` | `http://REDACTED_PRIVATE_IP:3001` | Primary availability monitoring dashboard |
-| `redundant-net` | `http://REDACTED_PRIVATE_IP:3001` | Secondary availability monitoring dashboard |
-
-### Current Uptime Kuma Baseline
-
-Current expected Uptime Kuma baseline:
-
-| Dashboard | Expected Status |
-| --- | --- |
-| HUB Kuma | 13 up, 0 down |
-| RN Kuma | 13 up, 0 down |
-
-The Brother printer and Litter-Robot monitors are intentionally excluded from both dashboards for now because they are not reliable infrastructure targets at this stage.
-
-### HUB Kuma
-
-HUB Kuma monitors core infrastructure services across the homelab environment.
-
-Current HUB Kuma coverage includes:
-
-* `infra-hub`
-* `redundant-net`
-* `spectrum-router`
-* HUB Pi-hole
-* RN Pi-hole
-* HUB Glances
-* RN Glances
-* HUB Grafana
-* HUB Loki
-* HUB Uptime Kuma
-* RN Uptime Kuma
-* HUB Samba NAS
-* RN Samba NAS
-
-### RN Kuma
-
-RN Kuma provides redundant monitoring from the secondary infrastructure node.
-
-Current RN Kuma coverage includes:
-
-* `infra-hub`
-* `redundant-net`
-* `spectrum-router`
-* HUB Pi-hole
-* RN Pi-hole
-* HUB Glances
-* RN Glances
-* HUB Grafana
-* HUB Loki
-* HUB Uptime Kuma
-* RN Uptime Kuma
-* HUB Samba NAS
-* RN Samba NAS
-
-### Uptime Kuma Monitor Categories
-
-#### Infrastructure
-
-* `infra-hub`
-* `redundant-net`
-* `spectrum-router`
-
-#### DNS Services
-
-* HUB Pi-hole
-* RN Pi-hole
-
-#### Monitoring Services
-
-* HUB Glances
-* RN Glances
-* HUB Grafana
-* HUB Loki
-* HUB Uptime Kuma
-* RN Uptime Kuma
-
-#### Storage Services
-
-* HUB Samba NAS
-* RN Samba NAS
-
----
-
-## Monitoring Tags
-
-Uptime Kuma monitors use tags to group services by role.
-
-Current tag categories include:
-
-* Infrastructure
-* DNS
-* Monitoring
-* Storage
-
-Peripheral monitoring is intentionally excluded from the current baseline until the related devices are stable enough to provide useful availability data.
-
----
-
-## Monitoring Philosophy
-
-The monitoring stack is designed to provide practical operational visibility rather than noisy or unnecessary alerts.
-
-Current monitoring priorities:
-
-* Core infrastructure availability
-* DNS service availability
-* Monitoring platform health
-* NAS and Samba reachability
-* Host-level health visibility
-* Log and metrics availability
-* Redundant dashboard access
-
-Monitoring should help answer operational questions such as:
-
-* Is the node online?
-* Is DNS reachable?
-* Is the dashboard reachable?
-* Is the NAS reachable?
-* Are logs available?
-* Are metrics available?
-* Can one node still monitor the other if a failure occurs?
-
----
-
-## Current Production Baseline
-
-Current monitoring production baseline:
-
-* `infra-hub` hosts Grafana, Loki, Promtail, Pi-hole Exporter, and Uptime Kuma containers.
-* `redundant-net` hosts Grafana, Loki, Promtail, Pi-hole Exporter, and Uptime Kuma containers.
-* HUB Kuma and RN Kuma both monitor core infrastructure services.
-* HUB Kuma and RN Kuma monitor each other.
-* HUB Kuma currently reports 13 up and 0 down.
-* RN Kuma currently reports 13 up and 0 down.
-* Printer and Litter-Robot monitors are intentionally excluded for now.
-* `/mnt/hub-nas` is monitored through HUB Samba NAS reachability.
-* `/mnt/rn-nas` is monitored through RN Samba NAS reachability.
-* Ansible maintenance validation confirms Docker service status and running containers on both nodes.
-
----
-
-## Screenshots
-
-Monitoring screenshots are stored in:
-
-```text
-docs/monitoring/screenshots/
-```
-
-Screenshots are used to document dashboard state and monitoring visibility.
-
-Because monitoring values change over time, screenshots should be treated as examples of dashboard configuration and visibility rather than fixed production metrics.
-
----
-
-## Related Documentation
-
-Related repository documentation:
-
-* `ansible/README.md`
-* `system-maintenance/README.md`
-* `glances-monitoring/README.md`
-* `pihole-setup/README.md`
-* `redundant-net/README.md`
-* `samba-nas/README.md`
-* `docs/diagrams/README.md`
-
----
+Historical screenshots do not represent live status.
 
 ## Future Improvements
 
-Planned or potential monitoring improvements:
+Planned improvements include:
 
-* Update the service dependency diagram to reflect the full observability stack.
-* Add additional Ansible validation playbooks for DNS, storage, and post-reboot checks.
-* Review whether Unbound should be monitored directly through command-based DNS validation.
-* Add alerting workflows after monitoring baselines are stable.
-* Revisit printer and Litter-Robot monitoring when those devices become reliable monitoring targets.
-* Continue refining dashboard documentation as production monitoring changes.
+- Updated observability architecture diagrams
+- Additional Ansible validation playbooks
+- Improved DNS health testing
+- Further monitoring redundancy
+- Refinement of alerting and dashboard coverage
+
+## Repository Security
+
+This public document intentionally excludes
+operational network addresses, private endpoints,
+credentials, and identifying device information.
+
+See docs/security/public-repository-policy.md
+for repository publication requirements.

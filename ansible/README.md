@@ -2,160 +2,104 @@
 
 ## Overview
 
-This directory contains Ansible inventory and playbooks used to automate maintenance checks and validation tasks across the `infra-ops` homelab environment.
+This directory contains Ansible playbooks for maintenance,
+monitoring, and validation of a two-node Linux homelab.
 
-Ansible is run from the Lenovo WSL Ubuntu command environment and connects to infrastructure nodes over SSH.
+Ansible runs from a Linux control workstation and connects
+to managed infrastructure nodes over SSH.
 
-## Control Node
+## Architecture
 
-| System | Role |
-| --- | --- |
-| Lenovo WSL Ubuntu | Ansible control node |
-| `infra-hub` | Managed infrastructure node |
-| `redundant-net` | Managed infrastructure node |
+| Component         | Role                               |
+| ----------------- | ---------------------------------- |
+| Linux workstation | Ansible control node               |
+| Primary server    | Core infrastructure services       |
+| Secondary server  | Redundancy and supporting services |
 
-## Managed Nodes
+Actual network addresses and SSH identities remain private.
 
-| Host | IP Address | Role |
-| --- | --- | --- |
-| `infra-hub` | `REDACTED_PRIVATE_IP` | Primary Infrastructure Node |
-| `redundant-net` | `REDACTED_PRIVATE_IP` | Secondary Infrastructure Node |
+## Inventory Management
 
-## Directory Structure
+Public example:
+`ansible/inventory/homelab.example.ini`
 
-```text
-ansible/
-├── README.md
-├── inventory/
-│   └── homelab.ini
-└── playbooks/
-    ├── ping.yml
-    └── maintenance-check.yml
-```
-
-## Inventory
-
-The inventory file is located at:
-
+Private operational inventory:
 `ansible/inventory/homelab.ini`
 
-The inventory defines the managed homelab nodes and the SSH user used by Ansible.
+The operational inventory is excluded from Git tracking.
 
-Current managed group:
+For a new installation, copy the public example to the private
+inventory path and supply your own connection settings.
 
-```ini
-[homelab]
-infra-hub ansible_host=REDACTED_PRIVATE_IP
-redundant-net ansible_host=REDACTED_PRIVATE_IP
-
-[homelab:vars]
-ansible_user=your_ssh_username
-ansible_python_interpreter=/usr/bin/python3
-```
+Never overwrite an existing operational inventory without
+verifying its contents first.
 
 ## Playbooks
 
-### ping.yml
+### Connectivity Test
 
-File location:
+File: `ansible/playbooks/ping.yml`
 
-`ansible/playbooks/ping.yml`
+Tests Ansible connectivity to managed nodes.
 
-Purpose:
+Run from the repository root:
 
-Validates that Ansible can connect to both managed nodes over SSH.
+    ansible-playbook -i ansible/inventory/homelab.ini ansible/playbooks/ping.yml --ask-pass
 
-Run from the repository root with:
+### Maintenance Check
 
-```bash
-ansible-playbook -i ansible/inventory/homelab.ini ansible/playbooks/ping.yml --ask-pass
-```
+File: `ansible/playbooks/maintenance-check.yml`
 
-Expected result:
+Runs read-only infrastructure validation checks, including:
 
-Both `infra-hub` and `redundant-net` should return successful Ansible ping results.
+- Host identification and uptime
+- Failed systemd services
+- Disk and storage mount status
+- Docker service and container status
+- Chrony time synchronization and sources
 
-### maintenance-check.yml
+Run from the repository root:
 
-File location:
+    ansible-playbook -i ansible/inventory/homelab.ini ansible/playbooks/maintenance-check.yml --ask-pass
 
-`ansible/playbooks/maintenance-check.yml`
+## Validation History
 
-Purpose:
+The maintenance playbook has previously completed successfully
+on both infrastructure nodes.
 
-Runs read-only maintenance checks across both infrastructure nodes.
+Recorded results per node:
 
-Current checks include:
+- 10 successful tasks
+- 0 changed tasks
+- 0 unreachable hosts
+- 0 failed tasks
 
-- Hostname validation
-- Uptime review
-- Failed systemd service review
-- Disk and NAS mount validation
-- Docker service status
-- Docker container listing
-- Chrony tracking
-- Chrony source validation
+These are historical results, not current health measurements.
 
-Run from the repository root with:
+## Operational Principles
 
-```bash
-ansible-playbook -i ansible/inventory/homelab.ini ansible/playbooks/maintenance-check.yml --ask-pass
-```
+Playbooks are intended to support repeatable, validated
+infrastructure operations.
 
-## Current Validation Status
+Production changes must be tested before being incorporated
+into automation.
 
-The Ansible maintenance check has been validated against both infrastructure nodes.
+Future automation may include package checks, post-reboot
+validation, DNS testing, storage checks, and service health.
 
-Current successful result:
+## Repository Security
 
-```text
-infra-hub      ok=10 changed=0 unreachable=0 failed=0
-redundant-net  ok=10 changed=0 unreachable=0 failed=0
-```
+Never publish real network addresses, operational SSH identities,
+credentials, private inventories, VPN configurations, or
+personally identifiable device information.
 
-Validated production checks include:
+Use sanitized examples and generic identifiers.
 
-- `infra-hub` reachable by Ansible
-- `redundant-net` reachable by Ansible
-- Docker service active on both nodes
-- Docker containers visible to the Ansible SSH user
-- `/mnt/hub-nas` mounted on `infra-hub`
-- `/mnt/rn-nas` mounted on `redundant-net`
-- Chrony synchronized on both nodes
-- Leap status normal on both nodes
+See `docs/security/public-repository-policy.md` for the
+complete security requirements.
 
-## Docker Access
+## Documentation Standards
 
-The Ansible SSH user has been added to the Docker group on both managed nodes so Docker status and container checks can run without sudo.
+Public documentation must reflect validated production behavior.
 
-This allows the maintenance playbook to validate running containers as part of the standard read-only maintenance check.
-
-## Known Service Notes
-
-The following failed services may appear during maintenance checks:
-
-- `openipmi.service`
-- `unbound-resolvconf.service`
-
-These should be reviewed during maintenance but are currently known observations in the environment.
-
-## Operational Use
-
-This Ansible setup supports the documented `system-maintenance` workflow by converting manual checks into repeatable automation.
-
-The current playbooks are intentionally read-only and are used for validation, visibility, and operational consistency.
-
-Future playbooks may include:
-
-- Package update checks
-- Post-reboot validation
-- DNS validation
-- Storage validation
-- Service-specific health checks
-- Controlled maintenance workflows
-
-## Notes
-
-Ansible automation should reflect the real production state of the homelab.
-
-Production changes should be validated manually first, then converted into repeatable Ansible playbooks after the workflow is proven.
+Review all changes before committing and pushing to GitHub.

@@ -1,456 +1,172 @@
-# Firewall Plan
+# Homelab Firewall Architecture and Hardening
 
-Planning document for LAN firewall hardening on the infra-ops homelab.
+## Overview
 
-This document defines intended access rules before enabling UFW or changing host firewall policy on `infra-hub` or `redundant-net`.
+This document describes the design, implementation, and
+validation of host firewall protections across a two-node
+Linux homelab.
 
-No firewall changes should be applied until this plan is reviewed, validated, documented, and backed by a safe rollback path.
+The objective is to restrict infrastructure management access
+while preserving DNS, storage, monitoring, and other required
+services.
 
----
+Operational firewall rules and network details remain private.
 
-## Goals
+## Security Objectives
 
-* Keep infrastructure dashboards visible to the admin workstation.
-* Keep DNS available to LAN clients.
-* Prevent media, IoT, guest, and non-admin client devices from accessing infrastructure dashboards.
-* Preserve HUB/RN node-to-node monitoring and service checks.
-* Avoid SSH lockout.
-* Avoid breaking Pi-hole, Unbound, Samba, Grafana, Prometheus, Loki, Glances, Uptime Kuma, or exporters.
+- Restrict administrative interfaces to trusted clients.
+- Preserve required infrastructure services.
+- Protect monitoring and management endpoints.
+- Support necessary communication between infrastructure nodes.
+- Restrict unnecessary access from untrusted devices.
+- Preserve SSH connectivity during firewall maintenance.
+- Maintain persistent filtering across system restarts.
 
----
+## Firewall Architecture
 
-## Current Exposure Summary
+Both infrastructure nodes use:
 
-Both `infra-hub` and `redundant-net` currently expose several services broadly on the LAN.
+- iptables for IPv4 packet filtering
+- ip6tables for IPv6 packet filtering
+- netfilter-persistent for rule persistence
+- Docker-aware filtering for published container services
 
-Observed listening services include:
+The initial firewall design considered UFW.
 
-| Port | Service | Current Exposure | Intended Direction |
-|---|---|---|---|
-| 22/tcp | SSH | LAN-wide | Admin only |
-| 53/tcp, 53/udp | Pi-hole DNS | LAN-wide | LAN-wide |
-| 80/tcp | Pi-hole web | LAN-wide | Admin only |
-| 443/tcp | Pi-hole web/HTTPS | LAN-wide | Admin only |
-| 139/tcp | Samba NetBIOS | LAN-wide | Trusted devices only |
-| 445/tcp | Samba SMB | LAN-wide | Trusted devices only |
-| 3000/tcp | Grafana | LAN-wide | Admin only |
-| 3001/tcp | Uptime Kuma | LAN-wide | Admin only |
-| 3100/tcp | Loki | LAN-wide | Admin/node only |
-| 61208/tcp | Glances | LAN-wide | Admin only |
-| 9090/tcp | Prometheus | LAN-wide | Admin/node only |
-| 9100/tcp | Node Exporter | LAN-wide | Admin/node only |
-| 9617/tcp | Pi-hole Exporter | LAN-wide | Admin/node only |
-| 5335/tcp, 5335/udp | Unbound | Localhost only | Keep localhost only |
-| 5353/udp | Avahi/mDNS | HUB only after discovery tools | Review later |
+During implementation, direct iptables management was adopted
+after package changes removed UFW.
 
----
+## Host Firewall Design
 
-## Trust Groups
+The IPv4 host firewall follows these principles:
 
-### Admin
+1. Permit localhost traffic.
+2. Permit established and related connections.
+3. Allow required infrastructure services.
+4. Restrict management access to authorized sources.
+5. Permit necessary infrastructure communication.
+6. Drop other inbound traffic.
 
-Admin devices may access infrastructure dashboards, SSH, monitoring services, and management endpoints.
+The specific source addresses, interfaces, and port
+assignments are maintained in private operational records.
 
-* Lenovo Command Station
+## Docker Firewall Integration
 
-### Optional Trusted
+Docker manages networking rules for published container ports.
 
-Optional trusted devices may be granted limited access later if needed.
+Host INPUT filtering alone may not protect Docker-published
+services because of Docker's forwarding behavior.
 
-* Galaxy S25+
+The implementation uses the DOCKER-USER chain to apply
+additional access restrictions to container services.
 
-### Core Infrastructure
+This protects monitoring and administrative interfaces
+while preserving required service communication.
 
-Core nodes require node-to-node monitoring and service checks.
+IPv6 filtering is also applied to selected published
+services to prevent unintended access paths.
 
-* infra-hub
-* redundant-net
-* Spectrum Router
+## Rule Persistence
 
-### Printer
+Firewall configuration is maintained through
+netfilter-persistent.
 
-The printer should only be reachable from devices that need to print.
+The implementation includes:
 
-* Brother Printer
+- Persistent IPv4 filtering
+- Persistent IPv6 filtering
+- Docker-specific access controls
+- Configuration backups
+- Rule validation before applying changes
 
-### Non-Admin Clients and IoT
+Changes must be reviewed and tested before being considered
+production-ready.
 
-These devices should not access infrastructure dashboards, SSH, Prometheus, Grafana, Loki, Glances, Uptime Kuma, or Samba unless explicitly required.
+## Implementation History
 
-* Phones
-* Guest/personal devices
-* Roku devices
-* TVs
-* Echo speaker
-* PlayStation 5
-* Smart frame
-* Smart litter box
-* Unknown/guest devices
+### October 2026 - Initial Hardening
 
----
+Host and Docker firewall protections were implemented
+and validated on both infrastructure nodes.
 
-## Draft Allowlist
+The implementation included:
 
-### Allow From Any LAN Client
+- Administrative access restrictions
+- Infrastructure service exceptions
+- Docker-published service filtering
+- IPv6 access restrictions for selected services
+- Persistent firewall configuration
+- Recovery and rollback checkpoints
 
-| Port | Purpose |
-|---|---|
-| 53/tcp | DNS to Pi-hole |
-| 53/udp | DNS to Pi-hole |
+### October 31, 2026 - Monitoring Recovery
 
-### Allow From Lenovo Command Station
+A monitoring exporter experienced a connectivity failure
+because hardened host filtering blocked necessary
+container-to-host communication.
 
-| Port | Purpose |
-|---|---|
-| 22/tcp | SSH administration |
-| 80/tcp | Pi-hole web/admin |
-| 443/tcp | Pi-hole web/admin HTTPS |
-| 139/tcp | Samba browsing if needed |
-| 445/tcp | Samba file access |
-| 3000/tcp | Grafana |
-| 3001/tcp | Uptime Kuma |
-| 3100/tcp | Loki |
-| 61208/tcp | Glances |
-| 9090/tcp | Prometheus |
-| 9100/tcp | Node Exporter |
-| 9617/tcp | Pi-hole Exporter |
+Troubleshooting identified the affected traffic path.
 
-### Allow Between HUB and RN
+A targeted firewall exception restored connectivity
+without removing the broader inbound filtering policy.
 
-HUB and RN should be allowed to communicate for monitoring, exporters, dashboards, DNS redundancy, and service checks.
+Validation confirmed:
 
-Exact node-to-node rules should be reviewed before implementation.
+- Required application API connectivity restored
+- Exporter metrics returned HTTP 200
+- Firewall rule syntax validation passed
+- Persistent rules were updated
+- Monitoring functionality recovered
 
-### Deny By Default
+The correction was also verified following a reboot.
 
-All other inbound access should be denied by default after required allow rules are confirmed.
+## Validation Methods
 
----
+Firewall maintenance uses several validation methods:
 
-### Docker and UFW Handling
+- SSH connectivity checks
+- DNS resolution tests
+- Infrastructure service health checks
+- Monitoring endpoint availability tests
+- Docker service connectivity tests
+- Firewall rule and packet counter inspection
+- IPv4 ruleset syntax validation using `iptables-restore --test`
+- Persistent rule validation using `netfilter-persistent`
+- Post-reboot verification
 
-Docker-published ports require special handling because Docker creates its own iptables rules.
+Historical validation confirmed required management and
+infrastructure connectivity from authorized systems.
 
-Observed Docker-published services include:
+These tests do not guarantee that every possible
+unauthorized access path has been tested.
 
-| Node | Port | Service |
-|---|---|---|
-| infra-hub | 3000/tcp | Grafana |
-| infra-hub | 3001/tcp | Uptime Kuma |
-| infra-hub | 3100/tcp | Loki |
-| redundant-net | 3000/tcp | Grafana |
-| redundant-net | 3001/tcp | Uptime Kuma |
-| redundant-net | 3100/tcp | Loki |
-| redundant-net | 9617/tcp | Pi-hole Exporter |
+## Operational Safety
 
-Plain UFW rules may not fully restrict these Docker-published ports.
+Before making firewall changes:
 
-The preferred firewall approach is:
+1. Preserve a known-good configuration.
+2. Confirm administrative access.
+3. Review service dependencies.
+4. Prepare a rollback procedure.
+5. Apply changes to one node at a time.
+6. Validate connectivity and service health.
+7. Verify persistence after changes.
+8. Record the completed maintenance work.
 
-* Use UFW for normal host services.
-* Use Docker-aware filtering for Docker-published services.
-* Prefer `DOCKER-USER` chain rules or container bind-address changes for Docker-exposed dashboards.
-* Allow the Lenovo Command Station to reach Docker dashboards.
-* Allow required HUB/RN node-to-node monitoring.
-* Deny media, IoT, guest, and non-admin client access to Docker dashboards.
+## Security and Documentation
 
-No Docker/UFW firewall implementation should begin until these rules are written, reviewed, and tested one node at a time.
+Detailed firewall rules, trusted addresses, interface
+information, and operational recovery records are private.
 
----
+Public documentation describes the architecture, reasoning,
+implementation process, and verified outcomes.
 
-## Implementation Safety Checklist
-
-Before enabling firewall rules:
-
-* Confirm Lenovo Command Station IP.
-* Confirm HUB and RN IPs.
-* Confirm SSH works to both nodes.
-* Confirm current UFW status.
-* Confirm Docker-published ports and Docker/UFW behavior.
-* Apply rules to one node at a time.
-* Keep an active SSH session open while testing.
-* Add SSH allow rule before enabling UFW.
-* Confirm DNS still works after rules are applied.
-* Confirm dashboards remain reachable from Lenovo.
-* Confirm IoT/media devices cannot reach admin dashboards.
-* Document exact rules after validation.
-* Commit and push documentation after changes.
-
----
-
-## Deferred Items
-
-* DHCP migration away from Spectrum router reservations.
-* RN Grafana Pi-hole/NAS panel cleanup.
-* Mirroring lightweight discovery tools to RN.
-* Planned kernel reboot after uptime/status screenshots.
-* Password rotation for any credentials exposed during troubleshooting.
-
----
+See docs/security/public-repository-policy.md for
+the public documentation requirements.
 
 ## Status
 
-`redundant-net` and `infra-hub` firewall hardening have been implemented and validated.
-
----
-
-## redundant-net Firewall Implementation Record
-
-`redundant-net` firewall hardening was implemented and validated on 2026-10-09 / 2026-10-10.
-
-### Management Change
-
-During persistence setup, installing `iptables-persistent` removed `ufw` on `redundant-net`.
-
-`redundant-net` is currently managed directly with:
-
-* `iptables`
-* `ip6tables`
-* `netfilter-persistent`
-
-Rules were saved with `sudo netfilter-persistent save`.
-
-Persistent rule files:
-
-| File | Purpose |
-|---|---|
-| `/etc/iptables/rules.v4` | Persistent IPv4 rules |
-| `/etc/iptables/rules.v6` | Persistent IPv6 rules |
-
-`netfilter-persistent` is enabled.
-
-### IPv4 Host Firewall
-
-The RN IPv4 INPUT chain allows required traffic first, then drops other inbound traffic.
-
-Current flow:
-
-1. Allow localhost.
-2. Allow established and related traffic.
-3. Allow SSH from Lenovo.
-4. Allow LAN DNS to Pi-hole.
-5. Allow Lenovo access to required host services.
-6. Allow HUB access to required RN host services.
-7. Allow DHCP replies from the current router.
-8. Drop all other inbound IPv4 traffic.
-
-Implemented allow rules:
-
-| Source | Ports | Purpose |
-|---|---|---|
-| `lo` | all | Localhost |
-| established/related | all | Existing connections |
-| `REDACTED_PRIVATE_IP` | `22/tcp` | Lenovo SSH admin |
-| `REDACTED_PRIVATE_IP/24` | `53/udp`, `53/tcp` | LAN DNS to RN Pi-hole |
-| `REDACTED_PRIVATE_IP` | `80,443,139,445,61208,9090,9100/tcp` | Lenovo host-service access |
-| `REDACTED_PRIVATE_IP` | `22,53,80,443,445,61208,9090,9100/tcp` | HUB-to-RN checks |
-| `REDACTED_PRIVATE_IP` | UDP source port `67` to destination port `68` | DHCP reply safety |
-| all other IPv4 inbound | all | Drop |
-
-### Docker Firewall
-
-RN Docker-published ports are controlled through the `DOCKER-USER` chain.
-
-Allowed sources:
-
-| Source | Ports | Purpose |
-|---|---|---|
-| `REDACTED_PRIVATE_IP` | `3000,3001,3100,9617/tcp` | Lenovo admin to RN Docker services |
-| `REDACTED_PRIVATE_IP` | `3000,3001,3100,9617/tcp` | HUB to RN Docker services |
-
-Denied sources:
-
-| Source | Ports | Purpose |
-|---|---|---|
-| `REDACTED_PRIVATE_IP/24` after earlier allow matches | `3000,3001,3100,9617/tcp` | Block non-admin LAN devices |
-
-### IPv6 Docker Firewall
-
-RN IPv6 access to Docker dashboard/exporter ports is blocked on `enp5s0`.
-
-| Interface | Ports | Purpose |
-|---|---|---|
-| `enp5s0` | `3000,3001,3100,9617/tcp` | Block IPv6 access to Docker dashboards/exporters |
-
-IPv6 allowlists can be added later if needed. The current management path is IPv4.
-
-### Validation
-
-Validated from Lenovo WSL:
-
-| Test | Result |
-|---|---|
-| SSH to RN | PASS |
-| DNS query to RN Pi-hole | PASS |
-| Pi-hole admin web | PASS |
-| Samba SMB `445/tcp` | PASS |
-| Glances `61208/tcp` | PASS |
-| Prometheus `9090/tcp` | PASS |
-| Node Exporter `9100/tcp` | PASS |
-| Grafana `3000/tcp` | PASS |
-| Uptime Kuma `3001/tcp` | PASS |
-| Loki `3100/tcp` | PASS |
-| Pi-hole Exporter `9617/tcp` | PASS |
-
-Validated from HUB:
-
-| Test | Result |
-|---|---|
-| RN Docker ports `3000,3001,3100,9617/tcp` | PASS |
-
-`DOCKER-USER` packet counters confirmed traffic hit the Lenovo and HUB allow rules.
-
-### Checkpoint
-
-Final production checkpoint saved on RN at:
-
-`/home/your_ssh_username/firewall-baselines/rn-firewall-final-checkpoint.txt`
-
----
-
-## 2026-10-31 RN Docker-to-Pi-hole API Correction
-
-RN's hardened INPUT firewall initially blocked Pi-hole Exporter from accessing the local Pi-hole API.
-
-The verified correction allows traffic from Docker's default bridge network to RN's Pi-hole API:
-
-    -A INPUT -i docker0 -s REDACTED_PRIVATE_IP/16 -d REDACTED_PRIVATE_IP/32 -p tcp -m tcp --dport 80 -j ACCEPT
-
-This rule precedes the existing INPUT DROP rule.
-
-Validation:
-
-- Docker-to-host Pi-hole API connectivity restored.
-- Pi-hole Exporter metrics returned HTTP 200.
-- Live firewall rule verified.
-- Persistent IPv4 configuration updated and backed up.
-- iptables-restore syntax validation passed.
-- netfilter-persistent confirmed enabled.
-
-The firewall exception survived the October 31 reboot. Its presence was verified with iptables -C, and Pi-hole Exporter metrics returned HTTP 200.
-
-Detailed incident record:
-[RN Pi-hole Exporter Recovery](../operations/rn-exporter-recovery-2026-10-31.md)
-
----
-## Updated Status
-
-`redundant-net` firewall hardening is implemented, validated, checkpointed, and persisted.
-
-`infra-hub` firewall hardening is implemented, validated, checkpointed, and persisted.
-
-
----
-
-## infra-hub Firewall Implementation Record
-
-`infra-hub` firewall hardening was implemented and validated on 2026-10-10.
-
-### Management Change
-
-`infra-hub` is currently managed directly with:
-
-* `iptables`
-* `ip6tables`
-* `netfilter-persistent`
-
-During persistence setup, installing `iptables-persistent` removed `ufw`, matching the behavior observed on `redundant-net`.
-
-Rules were saved with `sudo netfilter-persistent save`.
-
-Persistent rule files:
-
-| File | Purpose |
-|---|---|
-| `/etc/iptables/rules.v4` | Persistent IPv4 rules |
-| `/etc/iptables/rules.v6` | Persistent IPv6 rules |
-
-`netfilter-persistent` is enabled.
-
-### IPv4 Host Firewall
-
-The HUB IPv4 INPUT chain allows required traffic first, then drops other inbound traffic.
-
-Current flow:
-
-1. Allow localhost.
-2. Allow established and related traffic.
-3. Allow SSH from Lenovo.
-4. Allow LAN DNS to Pi-hole.
-5. Allow Lenovo access to required host services.
-6. Allow RN access to required HUB host services.
-7. Allow DHCP replies from the current router.
-8. Drop all other inbound IPv4 traffic.
-
-Implemented allow rules:
-
-| Source | Ports | Purpose |
-|---|---|---|
-| `lo` | all | Localhost |
-| established/related | all | Existing connections |
-| `REDACTED_PRIVATE_IP` | `22/tcp` | Lenovo SSH admin |
-| `REDACTED_PRIVATE_IP/24` | `53/udp`, `53/tcp` | LAN DNS to HUB Pi-hole |
-| `REDACTED_PRIVATE_IP` | `80,443,139,445,61208,9090,9100,9617/tcp` | Lenovo host-service access |
-| `REDACTED_PRIVATE_IP` | `22,53,80,443,445,61208,9090,9100,9617/tcp` | RN-to-HUB checks |
-| `REDACTED_PRIVATE_IP` | UDP source port `67` to destination port `68` | DHCP reply safety |
-| all other IPv4 inbound | all | Drop |
-
-### Docker Firewall
-
-HUB Docker-published ports are controlled through the `DOCKER-USER` chain.
-
-Allowed sources:
-
-| Source | Ports | Purpose |
-|---|---|---|
-| `REDACTED_PRIVATE_IP` | `3000,3001,3100/tcp` | Lenovo admin to HUB Docker services |
-| `REDACTED_PRIVATE_IP` | `3000,3001,3100/tcp` | RN to HUB Docker services |
-
-Denied sources:
-
-| Source | Ports | Purpose |
-|---|---|---|
-| `REDACTED_PRIVATE_IP/24` after earlier allow matches | `3000,3001,3100/tcp` | Block non-admin LAN devices |
-
-### IPv6 Docker Firewall
-
-HUB IPv6 access to Docker dashboard ports is blocked on `eno1`.
-
-| Interface | Ports | Purpose |
-|---|---|---|
-| `eno1` | `3000,3001,3100/tcp` | Block IPv6 access to Docker dashboards |
-
-IPv6 allowlists can be added later if needed. The current management path is IPv4.
-
-### Validation
-
-Validated from Lenovo WSL:
-
-| Test | Result |
-|---|---|
-| SSH to HUB | PASS |
-| DNS query to HUB Pi-hole | PASS |
-| Pi-hole admin web | PASS |
-| Samba SMB `445/tcp` | PASS |
-| Glances `61208/tcp` | PASS |
-| Prometheus `9090/tcp` | PASS |
-| Node Exporter `9100/tcp` | PASS |
-| Pi-hole Exporter `9617/tcp` | PASS |
-| Grafana `3000/tcp` | PASS |
-| Uptime Kuma `3001/tcp` | PASS |
-| Loki `3100/tcp` | PASS |
-
-Validated from RN:
-
-| Test | Result |
-|---|---|
-| HUB Docker ports `3000,3001,3100/tcp` | PASS |
-
-`DOCKER-USER` packet counters confirmed traffic hit the Lenovo and RN allow rules.
-
-### Checkpoint
-
-Final production checkpoint saved on HUB at:
-
-`/home/your_ssh_username/firewall-baselines/hub-firewall-final-checkpoint.txt`
-
+Firewall hardening has been implemented and historically
+validated on both infrastructure nodes.
+
+Current production status must be confirmed through
+live operational checks when required.

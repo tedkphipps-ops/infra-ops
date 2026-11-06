@@ -1,321 +1,225 @@
-# Maintenance Log
+# Infrastructure Maintenance Log
 
-This log records validated maintenance events for the homelab.
+## Overview
 
----
+This document records validated maintenance, recovery,
+and infrastructure improvements in a two-node Linux homelab.
 
-## 2026-10-31 RN Crash-Kernel Memory Recovery and Reboot Validation
+Entries describe completed work and historical results.
 
-### Summary
+Private network settings, authentication details,
+and operational configuration remain excluded.
 
-Recovered 320 MiB of RAM on redundant-net by removing the unused crash-kernel reservation.
+## October 31, 2026 - Crash-Kernel Memory Recovery
 
-### Changes Performed
+### Issue
 
-- Confirmed crash recovery was disabled (USE_KDUMP=0).
-- Purged the kdump-tools package.
-- Confirmed its GRUB configuration file was removed.
+The secondary infrastructure node had limited available RAM.
+
+Investigation identified a 320 MiB memory reservation
+for crash-kernel functionality that was not being used.
+
+### Resolution
+
+- Confirmed kernel crash recovery was disabled.
+- Removed the unused kdump-tools package.
+- Removed the obsolete crash-kernel configuration.
 - Regenerated GRUB using update-grub.
-- Verified the generated GRUB configuration contained no crashkernel parameter.
-- Successfully rebooted RN remotely over Tailscale.
-
-### Post-Reboot Validation
-
-- Crash-kernel reservation: 0 bytes.
-- Total usable RAM: approximately 3.3 GiB.
-- Swap usage immediately after reboot: 0 bytes.
-- Remote SSH access: PASS.
-- Pi-hole FTL: active.
-- Unbound: active.
-- Samba: active.
-- Docker: active.
-- netfilter-persistent: active.
-- RN NAS: mounted.
-- Pi-hole Exporter metrics: HTTP 200.
-- Docker-to-Pi-hole firewall exception: PRESENT after reboot.
-
-### Result
-
-The unused 320 MiB crash-kernel reservation was successfully eliminated.
-
-RN rebooted successfully, essential services remained operational, and the previously saved Docker-to-Pi-hole firewall correction survived the reboot.
-
-No additional packages were removed with apt autoremove.
-
----
-
-## 2026-10-31 RN Performance and Pi-hole Exporter Recovery
-
-Restarted RN Pi-hole Exporter after identifying excessive memory and swap consumption.
-
-- RN RAM utilization decreased from approximately 80% to 36%.
-- Exporter process swap decreased from approximately 516 MiB to zero.
-- Identified and repaired Docker-to-host Pi-hole API firewall connectivity.
-- Saved and validated the firewall exception.
-- Confirmed exporter metrics HTTP 200.
-- Validated Pi-hole, Unbound, Samba, NAS, Docker, and monitoring services.
-- Firewall exception survived the October 31 reboot; verified with iptables -C.
-
-Detailed record: [RN Exporter Recovery](rn-exporter-recovery-2026-10-31.md)
-
----
-
-## 2026-10-31 Remote Administration Validation
-
-Validated remote administration through Tailscale from ROG Zephyrus to HUB and RN.
-
-- Remote SSH access to both infrastructure nodes verified.
-- Tailscale integrated with existing host firewall management.
-- ROG configured with Git, GitHub CLI, and local infra-ops repository.
-- Lenovo WSL remains the established Ansible control environment.
-
-Detailed record: [Tailscale Remote Access](tailscale-remote-access.md)
-
----
-
-## 2026-10-25 RN NAS Filesystem Recovery
-
-Repaired RN NAS NTFS dirty-flag issue and restored normal NTFS3 mounting.
-
-- Cleared filesystem dirty flag.
-- Removed forced mount configuration.
-- Verified read-write NTFS3 mounting and Samba access.
-- Confirmed NAS mounted during October 31 health checks.
-- Separate USB reset investigation remains unresolved.
-
-Detailed record: [RN NAS Recovery](rn-nas-recovery-2026-10-25.md)
-
----
-## 2026-10-12 Static IP Baseline for Core Nodes
-
-### Summary
-
-Both core homelab nodes were converted from DHCP-assigned addresses to true static local netplan addresses.
-
-This locks the infrastructure nodes to their expected management IPs before any future DHCP migration work.
-
-Nodes:
-
-| Node | Hostname | Interface | Static IP | Gateway |
-|---|---|---|---|---|
-| HUB | `infra-hub` | `eno1` | `REDACTED_PRIVATE_IP/24` | `REDACTED_PRIVATE_IP` |
-| RN | `redundant-net` | `enp5s0` | `REDACTED_PRIVATE_IP/24` | `REDACTED_PRIVATE_IP` |
-
-### Background
-
-The Spectrum router is still providing DHCP for the LAN.
-
-During DHCP planning, both HUB and RN were confirmed to still be using dynamic DHCP leases even though their addresses were stable. Before moving DHCP authority away from the Spectrum router, the core infrastructure nodes were converted to static local addressing.
-
-### RN Netplan Cleanup
-
-Before the static conversion, `redundant-net` had duplicate/stale netplan content in `/etc/netplan/00-installer-config.yaml`.
-
-A backup was created:
-
-| Node | Backup |
-|---|---|
-| `redundant-net` | `/etc/netplan/00-installer-config.yaml.bak-before-cleanup` |
-
-The RN netplan file was cleaned, regenerated, applied, and validated while still using DHCP before the static conversion.
-
-### Static IP Conversion
-
-Backups were created before static conversion:
-
-| Node | Backup |
-|---|---|
-| `infra-hub` | `/etc/netplan/00-installer-config.yaml.bak-before-static` |
-| `redundant-net` | `/etc/netplan/00-installer-config.yaml.bak-before-static` |
-
-Both nodes were updated through netplan and applied using `netplan try` so the configuration would roll back automatically if connectivity failed.
-
-### Final Network State
-
-| Node | Static address validation | Default route validation |
-|---|---|---|
-| `infra-hub` | `REDACTED_PRIVATE_IP/24`, `valid_lft forever` | `default via REDACTED_PRIVATE_IP dev eno1 proto static` |
-| `redundant-net` | `REDACTED_PRIVATE_IP/24`, `valid_lft forever` | `default via REDACTED_PRIVATE_IP dev enp5s0 proto static` |
-
-### DNS State
-
-Both nodes use the local Pi-hole pair as primary DNS resolvers:
-
-| Node | DNS order |
-|---|---|
-| `infra-hub` | `REDACTED_PRIVATE_IP`, `REDACTED_PRIVATE_IP` |
-| `redundant-net` | `REDACTED_PRIVATE_IP`, `REDACTED_PRIVATE_IP` |
-
-An IPv6 DNS resolver from the Spectrum/router side was still visible through `resolvectl`. This is non-blocking for the static IPv4 baseline and should be reviewed later if strict Pi-hole-only DNS enforcement is desired.
-
-### Lenovo Service Port Checks
-
-Validated from Lenovo WSL against each node:
-
-| Port | Service |
-|---|---|
-| `22/tcp` | SSH |
-| `53/tcp` | DNS |
-| `80/tcp` | Pi-hole web |
-| `445/tcp` | Samba |
-| `61208/tcp` | Glances |
-| `9090/tcp` | Prometheus |
-| `9100/tcp` | Node Exporter |
-| `9617/tcp` | Pi-hole Exporter |
-| `3000/tcp` | Grafana |
-| `3001/tcp` | Uptime Kuma |
-| `3100/tcp` | Loki |
-
-All checked ports passed on both nodes after static conversion.
-
-### Ansible Result
-
-Final Ansible maintenance check completed successfully:
-
-| Node | ok | changed | unreachable | failed |
-|---|---:|---:|---:|---:|
-| `infra-hub` | 10 | 0 | 0 | 0 |
-| `redundant-net` | 10 | 0 | 0 | 0 |
-
-Both nodes reported zero failed systemd units. Docker was active and expected containers were running.
-
-### Result
-
-The core homelab nodes now have true static local IPv4 addresses, confirmed service reachability, and clean Ansible maintenance validation. This establishes a safer baseline before any future DHCP migration work.
-
----
-
-## 2026-10-10 Firewall Hardening and Kernel Reboot Validation
-
-### Summary
-
-Both core homelab nodes were rebooted one at a time after firewall hardening and pending kernel updates.
-
-Nodes:
-
-| Node | Hostname | IP |
-|---|---|---|
-| HUB | `infra-hub` | `REDACTED_PRIVATE_IP` |
-| RN | `redundant-net` | `REDACTED_PRIVATE_IP` |
-
-### Pre-Reboot State
-
-Both nodes were running:
-
-| Node | Kernel before reboot | Reboot required |
-|---|---|---|
-| `infra-hub` | `7.0.0-28-generic` | yes |
-| `redundant-net` | `7.0.0-28-generic` | yes |
-
-Pending reboot packages included `libc6`, `linux-base`, and newer kernel images up through `linux-image-7.0.0-38-generic`.
-
-### Reboot Order
-
-1. `redundant-net`
-2. `infra-hub`
-
-Nodes were rebooted one at a time so the other node remained available during validation.
-
-### Post-Reboot State
-
-Both nodes came back successfully on:
-
-| Node | Kernel after reboot | Reboot required |
-|---|---|---|
-| `infra-hub` | `7.0.0-38-generic` | no |
-| `redundant-net` | `7.0.0-38-generic` | no |
-
-### Post-Reboot Validation
-
-Validated after reboot:
-
-| Check | `infra-hub` | `redundant-net` |
-|---|---|---|
-| SSH reachable | PASS | PASS |
-| Kernel updated | PASS | PASS |
-| Reboot-required cleared | PASS | PASS |
-| Docker service active | PASS | PASS |
-| Expected Docker containers running | PASS | PASS |
-| `netfilter-persistent` active | PASS | PASS |
-| `netfilter-persistent` enabled | PASS | PASS |
-| Lenovo service port checks | PASS | PASS |
-| Full Ansible maintenance check | PASS | PASS |
-
-### Lenovo Service Port Checks
-
-Validated from Lenovo WSL against each node:
-
-| Port | Service |
-|---|---|
-| `22/tcp` | SSH |
-| `53/tcp` | DNS |
-| `80/tcp` | Pi-hole web |
-| `445/tcp` | Samba |
-| `61208/tcp` | Glances |
-| `9090/tcp` | Prometheus |
-| `9100/tcp` | Node Exporter |
-| `9617/tcp` | Pi-hole Exporter |
-| `3000/tcp` | Grafana |
-| `3001/tcp` | Uptime Kuma |
-| `3100/tcp` | Loki |
-
-All checked ports passed on both nodes.
-
-### Ansible Result
-
-Final post-reboot Ansible maintenance check completed successfully:
-
-| Node | ok | changed | unreachable | failed |
-|---|---:|---:|---:|---:|
-| `infra-hub` | 10 | 0 | 0 | 0 |
-| `redundant-net` | 10 | 0 | 0 | 0 |
-
-### Known Non-Blocking Issue
-
-Both nodes still report the known failed service:
-
-| Service | Notes |
-|---|---|
-| `openipmi.service` | Known existing issue; not introduced by this reboot validation |
-
-### Result
-
-Firewall hardening survived reboot on both nodes. Kernel updates were applied successfully. Docker services, monitoring services, DNS access, Samba access, and firewall persistence validated successfully after reboot.
-
-
----
-
-## 2026-10-10 openipmi Service Cleanup
-
-### Summary
-
-Both core homelab nodes were showing a failed `openipmi.service` after reboot validation.
-
-The service is intended for IPMI/server hardware management. The current HUB and RN systems are laptop-based nodes and do not require local IPMI driver startup.
-
-### Action Taken
-
-On both nodes:
-
-| Node | Action |
-|---|---|
-| `infra-hub` | Disabled `openipmi.service`, masked it, and reset failed state |
-| `redundant-net` | Disabled `openipmi.service`, masked it, and reset failed state |
-
-Packages were not removed. This avoids disturbing `ipmitool` or Prometheus node exporter collector recommendations.
+- Verified the generated configuration.
+- Rebooted the node and performed health checks.
 
 ### Validation
 
-Final Ansible maintenance check completed successfully:
+- Crash-kernel reservation reduced to zero.
+- Approximately 320 MiB of usable RAM recovered.
+- Total usable memory increased to about 3.3 GiB.
+- Essential infrastructure services remained active.
+- Storage and monitoring services were verified.
+- Persistent firewall configuration survived reboot.
 
-| Node | ok | changed | unreachable | failed |
-|---|---:|---:|---:|---:|
-| `infra-hub` | 10 | 0 | 0 | 0 |
-| `redundant-net` | 10 | 0 | 0 | 0 |
+Result: Successfully completed.
 
-Both nodes now report zero failed systemd units.
+## October 31, 2026 - Monitoring Exporter Recovery
 
-### Result
+### Issue
 
-The known `openipmi.service` failure noise has been cleared from both nodes while preserving installed monitoring-related packages.
+A monitoring exporter experienced excessive memory
+and swap consumption.
 
+A separate connectivity problem prevented the exporter
+from reaching its required application API.
+
+### Resolution
+
+- Investigated process memory and swap utilization.
+- Restarted the affected exporter container.
+- Identified a Docker-to-host firewall restriction.
+- Applied a targeted firewall correction.
+- Validated firewall syntax and persistence.
+- Confirmed restored monitoring functionality.
+
+### Validation
+
+- Host RAM utilization decreased substantially.
+- Exporter swap consumption returned to zero.
+- Exporter metrics endpoint returned HTTP 200.
+- Application API connectivity was restored.
+- The firewall correction survived reboot.
+
+Result: Successfully completed.
+
+Related documentation:
+[Exporter Recovery](rn-exporter-recovery-2026-10-31.md)
+
+## October 31, 2026 - Remote Administration Validation
+
+### Work Performed
+
+Validated private remote administration capabilities
+from an additional management workstation.
+
+Validation included:
+
+- Authenticated SSH connectivity
+- Private networking availability
+- Compatibility with existing firewall restrictions
+- Infrastructure health checks
+- Git and GitHub workflow availability
+
+The established Linux Ansible control environment
+remained unchanged.
+
+Result: Remote administration successfully validated.
+
+Related documentation:
+[Secure Remote Administration](tailscale-remote-access.md)
+
+## October 25, 2026 - NAS Filesystem Recovery
+
+### Issue
+
+A secondary storage device experienced an NTFS
+filesystem dirty-flag condition.
+
+The condition interfered with normal filesystem mounting.
+
+### Resolution
+
+- Investigated the NTFS filesystem condition.
+- Cleared the filesystem dirty flag.
+- Removed the temporary forced-mount configuration.
+- Restored normal NTFS3 mounting.
+- Validated read-write storage access.
+- Confirmed Samba availability.
+
+### Validation
+
+Normal filesystem mounting and storage sharing
+were restored successfully.
+
+A separate USB reset investigation remained open
+at the time of the recovery.
+
+Related documentation:
+[NAS Recovery](rn-nas-recovery-2026-10-25.md)
+
+## October 12, 2026 - Static Network Configuration
+
+### Objective
+
+Prepare the infrastructure nodes for a future
+DHCP migration by removing their dependence on
+router-assigned DHCP leases.
+
+### Work Performed
+
+- Reviewed existing netplan configuration.
+- Removed obsolete and duplicate configuration.
+- Created configuration backups.
+- Configured static IPv4 addressing.
+- Used netplan try for safe configuration testing.
+- Verified network routes and DNS resolution.
+- Validated infrastructure service connectivity.
+
+### Validation
+
+Both infrastructure nodes retained their expected
+network connectivity after conversion.
+
+Ansible maintenance checks completed successfully
+with zero failed or unreachable hosts.
+
+Result: Static network configuration validated.
+
+DHCP migration itself remains planned, not implemented.
+
+## October 10, 2026 - Firewall and Kernel Maintenance
+
+### Work Performed
+
+- Applied host firewall hardening.
+- Implemented Docker-aware traffic filtering.
+- Configured persistent IPv4 and IPv6 rules.
+- Prepared recovery and rollback checkpoints.
+- Applied pending kernel updates.
+- Rebooted infrastructure nodes individually.
+- Verified service availability after each reboot.
+
+### Validation
+
+- SSH connectivity restored successfully.
+- DNS and storage services operational.
+- Docker containers running.
+- Monitoring services available.
+- Persistent firewall configuration verified.
+- Ansible maintenance checks passed.
+
+Result: Firewall and kernel maintenance validated.
+
+## October 10, 2026 - Failed Service Cleanup
+
+### Issue
+
+An unnecessary IPMI-related service produced failed
+systemd status reports on laptop-based infrastructure nodes.
+
+### Resolution
+
+- Investigated the failed service.
+- Confirmed IPMI functionality was not required.
+- Disabled and masked openipmi.service.
+- Cleared its failed systemd state.
+- Preserved installed monitoring-related packages.
+
+### Validation
+
+Both infrastructure nodes subsequently reported
+zero failed systemd units.
+
+Ansible maintenance checks completed successfully.
+
+Result: Unnecessary service failure noise eliminated.
+
+## Maintenance Principles
+
+Infrastructure maintenance follows these practices:
+
+1. Inspect current production state.
+2. Identify dependencies and potential risks.
+3. Preserve configuration backups.
+4. Prepare recovery and rollback procedures.
+5. Make controlled changes.
+6. Validate functionality after changes.
+7. Document verified outcomes.
+8. Publish sanitized technical summaries.
+
+## Security and Documentation
+
+Historical maintenance records are not a substitute
+for current production health checks.
+
+Detailed configurations, private network information,
+and sensitive recovery records are maintained separately.
+
+See docs/security/public-repository-policy.md
+for public documentation requirements.

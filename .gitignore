@@ -1,0 +1,31 @@
+# Private Ansible inventories
+/ansible/inventory/homelab.ini
+/ansible/inventory/*.local.ini
+/ansible/inventory/*.private.ini
+
+# Local environment and credential files
+**/.env
+**/.env.*
+!**/.env.example
+**/secrets.yml
+**/secrets.yaml
+**/credentials.yml
+**/credentials.yaml
+**/vault.yml
+**/vault.yaml
+**/.vault_pass*
+**/ansible-vault-password*
+
+# SSH configuration and private keys
+**/.ssh/
+**/id_rsa*
+**/id_ed25519*
+**/id_ecdsa*
+**/id_dsa*
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+
+# VPN configuration
+**/*.ovpn

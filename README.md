@@ -67,8 +67,8 @@ The environment currently operates across two infrastructure nodes:
 | `redundant-net`      | Secondary Infrastructure Node And Resiliency Platform   |
 | `glances-monitoring` | Host-Level Monitoring And Operational Visibility        |
 | `samba-nas`          | Network Attached Storage And Infrastructure Persistence |
-| `system-maintenance` | Routine maintenance workflow, health checks, update validation, and post-reboot verification |
-| `ansible`            | Infrastructure automation for maintenance checks, validation, and repeatable operations |
+| `system-maintenance` | Health checks, updates, and post-reboot validation      |
+| `ansible`            | Automated maintenance checks and validation             |
 
 ---
 
@@ -137,10 +137,10 @@ This architecture provides:
 
 The infrastructure currently utilizes dual NAS deployments.
 
-| Node            | Mount Path     | Purpose             |
-| --------------- | -------------- | ------------------- |
-| `infra-hub`     | `/mnt/hub-nas` | Primary NAS Storage |
-| `redundant-net` | `/mnt/rn-nas`  | Backup NAS Storage  |
+| Node            | Storage Location | Purpose             |
+| --------------- | ---------------- | ------------------- |
+| `infra-hub`     | Not published    | Primary NAS Storage |
+| `redundant-net` | Not published    | Backup NAS Storage  |
 
 Storage visibility is integrated into the monitoring stack through Prometheus, Node Exporter, Grafana, and Glances.
 

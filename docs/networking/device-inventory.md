@@ -44,65 +44,67 @@ sudo arp-scan --localnet --interface=eno1 \
 
 ## Core Infrastructure
 
-| Device | Role | Trust Group | Notes |
-|---|---|---|---|
-| Spectrum Router | Default gateway / DHCP server | Core infrastructure | Router app labels have proven unreliable. DHCP migration is a future roadmap item. |
-| infra-hub | Primary infrastructure node | Core infrastructure | Hosts core DNS, storage, monitoring, logging, and management services. |
-| redundant-net | Secondary infrastructure node | Core infrastructure | Mirrors key infrastructure services for redundancy. Hardware/vendor fingerprint may appear as Pegatron. |
-| Lenovo Command Station | Primary administration workstation | Admin | Main WSL control host for Ansible, GitHub, documentation, and infrastructure management. |
+| Device            | Role                               | Trust Group         | Notes                                                    |
+| ----------------- | ---------------------------------- | ------------------- | -------------------------------------------------------- |
+| ISP router        | Default gateway / DHCP server      | Core infrastructure | Gateway and DHCP; migration planned.                     |
+| infra-hub         | Primary infrastructure node        | Core infrastructure | Hosts DNS, storage, monitoring, logging, and management. |
+| redundant-net     | Secondary infrastructure node      | Core infrastructure | Provides redundant infrastructure services.              |
+| Admin workstation | Primary administration workstation | Admin               | Ansible, Git, documentation, and administration.         |
 
 ---
 
 ## Admin and Trusted Devices
 
-| Device | Trust Group | Notes |
-|---|---|---|
-| Lenovo Command Station | Admin | Primary trusted workstation. Should retain access to dashboards, SSH, Git workflows, and management interfaces. |
-| Galaxy S25+ | Optional trusted/admin | Primary mobile device. May receive limited trusted access later if needed. Not required for initial firewall hardening. |
+| Device                 | Trust Group      | Notes                                                            |
+| ---------------------- | ---------------- | ---------------------------------------------------------------- |
+| Lenovo Command Station | Admin            | Primary management host; retain SSH and dashboard access.        |
+| ROG Mobile Command     | Admin (planned)  | Target equal access after firewall and remote access validation. |
+| Galaxy S25+            | Optional trusted | Limited access may be considered during future hardening.        |
 
 ---
 
 ## Client Devices
 
-| Device | Trust Group | Notes |
-|---|---|---|
-| Kayla's iPhone | Client / non-admin | Known client device. No infrastructure dashboard access by default. |
-| Jordan's phone | Client / non-admin | Known client device. No infrastructure dashboard access by default. |
-| Moto Z4 | Client / non-admin | Used for smart frame management and occasional SMB/NAS access testing. Powered on/off as needed. |
-| TJ's iPhone | Client / non-admin | Known roommate/client device. No infrastructure dashboard access by default. |
-| Unknown Apple-like device | Client / guest candidate | Identified through Apple/iCloud/Pinterest DNS behavior. Keep non-admin until positively identified. |
+| Device                    | Trust Group              | Notes                                              |
+| ------------------------- | ------------------------ | -------------------------------------------------- |
+| Client iPhone A           | Client / non-admin       | No infrastructure dashboard access by default.     |
+| Client iPhone B           | Client / non-admin       | No infrastructure dashboard access by default.     |
+| Secondary Android phone   | Client / non-admin       | Occasional smart-frame management and NAS testing. |
+| Client iPhone C           | Client / non-admin       | No infrastructure dashboard access by default.     |
+| Unidentified Apple device | Client / guest candidate | Identification pending; keep non-admin.            |
 
 ---
 
 ## Printer
 
-| Device | Trust Group | Notes |
-|---|---|---|
-| Brother Printer | Printer / IoT | Confirmed reachable by direct ping when powered on. Allow printing only from needed trusted devices. No dashboard, SSH, or Samba access required. |
+| Device          | Trust Group   | Notes                                                      |
+| --------------- | ------------- | ---------------------------------------------------------- |
+| Brother Printer | Printer / IoT | Ping-verified; permit printing from approved devices only. |
 
 ---
 
 ## Media and IoT Devices
 
-| Device | Trust Group | Notes |
-|---|---|---|
-| PlayStation 5 | Gaming / media / non-admin | Confirmed through live ARP scan when powered on. |
-| 50 inch Insignia Roku TV | Media / IoT / non-admin | Identified through Roku fingerprinting. No infrastructure access required. |
-| T.K.'s Little TV Roku | Media / IoT / non-admin | Roku Express device. Bedroom Roku device. No infrastructure access required. |
-| 65 inch Hisense Roku TV | Media / IoT / non-admin | Living room Roku TV. No infrastructure access required. |
-| TJ's Echo speaker | Media / IoT / non-admin | Likely identified by Amazon MAC vendor and audio/media behavior. Confirm later with power test if needed. |
-| Smart Frame | IoT / non-admin | Confirmed by physical power test. No infrastructure access required. |
-| Smart Litter Box | IoT / non-admin | Known network-connected IoT device. Exact network identity still pending if needed. |
+| Device                   | Trust Group                | Notes                                            |
+| ------------------------ | -------------------------- | ------------------------------------------------ |
+| PlayStation 5            | Gaming / media / non-admin | Identified through ARP discovery.                |
+| 50-inch Insignia Roku TV | Media / IoT / non-admin    | Identified through Roku fingerprinting.          |
+| Roku Express             | Media / IoT / non-admin    | Roku streaming device; no infrastructure access. |
+| 65-inch Hisense Roku TV  | Media / IoT / non-admin    | Roku TV; no infrastructure access.               |
+| Amazon Echo speaker      | Media / IoT / non-admin    | Tentative identification; power test pending.    |
+| Smart frame              | IoT / non-admin            | Confirmed through physical power testing.        |
+| Smart litter box         | IoT / non-admin            | Network identity confirmation pending.           |
 
 ---
 
-## Current Firewall Trust Model
+## Planned Firewall Trust Model
 
 ### Admin
 
 Admin devices may need access to infrastructure dashboards, SSH, monitoring services, and management endpoints.
 
 * Lenovo Command Station
+* ROG Mobile Command (planned)
 
 ### Optional Trusted
 
@@ -144,13 +146,13 @@ The printer should only be reachable from devices that need to print.
 * Many IoT/media devices remain network-visible while the display appears off.
 * The smart frame was confirmed by power testing.
 * Roku devices were identified through local device fingerprinting.
-* The Lenovo Command Station should be the initial admin allowlist device for firewall planning.
+* Lenovo Command Station is the initial admin allowlist device; ROG Mobile Command is planned for equivalent access after validation.
 
 ---
 
 ## Pending Follow-Up
 
-* Confirm TJ's Echo speaker with a physical power test if needed.
+* Confirm Echo smart speaker with a physical power test if needed.
 * Identify the smart litter box network identity if required for firewall rules.
 * Decide whether Galaxy S25+ should receive limited trusted/admin access.
 * Plan DHCP migration away from reliance on Spectrum router reservations.

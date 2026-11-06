@@ -8,10 +8,10 @@ Unlike the installation guides throughout this repository, this documentation fo
 
 Current infrastructure nodes:
 
-| Node | Hostname | Role |
-|------|----------|------|
-| HUB | `infra-hub` | Primary infrastructure node |
-| RN | `redundant-net` | Secondary / redundant infrastructure node |
+| Node | Hostname        | Role                                      |
+| ---- | --------------- | ----------------------------------------- |
+| HUB  | `infra-hub`     | Primary infrastructure node               |
+| RN   | `redundant-net` | Secondary / redundant infrastructure node |
 
 ---
 
@@ -235,10 +235,10 @@ mount | grep nas
 
 Expected mount points:
 
-| Node | Mount Point |
-|------|-------------|
-| `infra-hub` | `/mnt/hub-nas` |
-| `redundant-net` | `/mnt/rn-nas` |
+| Node            | Storage Role  |
+| --------------- | ------------- |
+| `infra-hub`     | Primary NAS   |
+| `redundant-net` | Secondary NAS |
 
 ---
 
