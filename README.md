@@ -54,7 +54,7 @@ The environment currently operates across two infrastructure nodes:
 
 * Samba NAS
 * HUB NAS Storage
-* RN Backup NAS Storage
+* RN Secondary NAS Storage
 
 ---
 
@@ -137,10 +137,10 @@ This architecture provides:
 
 The infrastructure currently utilizes dual NAS deployments.
 
-| Node            | Storage Location | Purpose             |
-| --------------- | ---------------- | ------------------- |
-| `infra-hub`     | Not published    | Primary NAS Storage |
-| `redundant-net` | Not published    | Backup NAS Storage  |
+| Node            | Storage Location | Purpose               |
+| --------------- | ---------------- | --------------------- |
+| `infra-hub`     | Not published    | Primary NAS Storage   |
+| `redundant-net` | Not published    | Secondary NAS Storage |
 
 Storage visibility is integrated into the monitoring stack through Prometheus, Node Exporter, Grafana, and Glances.
 
@@ -212,6 +212,12 @@ This repository documents the progression from isolated self-hosted services int
 The goal is not only to deploy services, but to build, validate, document, monitor, and continuously improve a resilient infrastructure ecosystem.
 
 ---
+
+## Operational Troubleshooting
+
+A validated recovery on both infrastructure nodes restored Grafana connectivity to host-level Prometheus through targeted Docker-to-host firewall corrections.
+
+[Grafana-to-Prometheus Recovery](docs/operations/grafana-prometheus-recovery-2026-11.md)
 
 ## Repository Security Audit
 
