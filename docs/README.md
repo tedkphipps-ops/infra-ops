@@ -89,6 +89,7 @@ Secondary infrastructure node providing:
 * Samba NAS
 * backup-share (3 TB storage)
 * Glances
+* Uptime Kuma
 
 ## Core Infrastructure Services
 
