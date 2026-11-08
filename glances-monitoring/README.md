@@ -67,11 +67,13 @@ sudo pip3 install glances[web] --break-system-packages
 
 ## Firewall Configuration
 
-Allow inbound access to the Glances monitoring web interface:
+Host firewall access is managed using `iptables` and `ip6tables`, with persistent rules maintained through `netfilter-persistent`.
 
-```bash
-sudo ufw allow 61208/tcp
-```
+The Glances web interface uses TCP port `61208`. Access should be restricted to approved management clients and networks rather than opened broadly.
+
+Before modifying firewall rules, review the existing access policy and validate that approved management clients can reach Glances.
+
+See `docs/networking/firewall-plan.md` for the infrastructure firewall architecture and operational guidance.
 
 ---
 

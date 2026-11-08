@@ -44,7 +44,7 @@ Tests Ansible connectivity to managed nodes.
 
 Run from the repository root:
 
-    ansible-playbook -i ansible/inventory/homelab.ini ansible/playbooks/ping.yml --ask-pass
+    ansible-playbook -i ansible/inventory/homelab.ini ansible/playbooks/ping.yml
 
 ### Maintenance Check
 
@@ -60,7 +60,18 @@ Runs read-only infrastructure validation checks, including:
 
 Run from the repository root:
 
-    ansible-playbook -i ansible/inventory/homelab.ini ansible/playbooks/maintenance-check.yml --ask-pass
+    ansible-playbook -i ansible/inventory/homelab.ini ansible/playbooks/maintenance-check.yml
+
+### DNS Validation
+
+File: `ansible/playbooks/dns-check.yml`
+
+Runs read-only DNS resolution and service-status checks
+for Pi-hole and Unbound on both infrastructure nodes.
+
+Run from the repository root:
+
+    ansible-playbook -i ansible/inventory/homelab.ini ansible/playbooks/dns-check.yml
 
 ## Validation History
 
@@ -85,7 +96,7 @@ Production changes must be tested before being incorporated
 into automation.
 
 Future automation may include package checks, post-reboot
-validation, DNS testing, storage checks, and service health.
+validation, expanded storage checks, and service health.
 
 ## Repository Security
 

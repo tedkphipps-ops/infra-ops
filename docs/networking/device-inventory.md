@@ -14,7 +14,7 @@ Sensitive identifiers such as serial numbers, device IDs, and full MAC addresses
 * Sync validated production findings back into GitHub after discovery.
 * Do not trust consumer router labels as authoritative.
 * Prefer direct validation using hostnames, Pi-hole data, ARP/neighbor tables, and lightweight fingerprinting.
-* Classify devices by trust group before firewall hardening.
+* Use device trust groups to review and refine existing firewall rules.
 * Do not grant dashboard, SSH, Samba, or admin access to media/IoT devices unless explicitly required.
 
 ---
@@ -58,7 +58,7 @@ sudo arp-scan --localnet --interface=eno1 \
 | Device                 | Trust Group      | Notes                                                            |
 | ---------------------- | ---------------- | ---------------------------------------------------------------- |
 | Lenovo Command Station | Admin            | Primary management host; retain SSH and dashboard access.        |
-| ROG Mobile Command     | Admin (planned)  | Target equal access after firewall and remote access validation. |
+| ROG Mobile Command     | Admin            | GitHub and SSH access verified.                                  |
 | Galaxy S25+            | Optional trusted | Limited access may be considered during future hardening.        |
 
 ---
@@ -104,7 +104,7 @@ sudo arp-scan --localnet --interface=eno1 \
 Admin devices may need access to infrastructure dashboards, SSH, monitoring services, and management endpoints.
 
 * Lenovo Command Station
-* ROG Mobile Command (planned)
+* ROG Mobile Command (GitHub and SSH verified)
 
 ### Optional Trusted
 
@@ -146,7 +146,7 @@ The printer should only be reachable from devices that need to print.
 * Many IoT/media devices remain network-visible while the display appears off.
 * The smart frame was confirmed by power testing.
 * Roku devices were identified through local device fingerprinting.
-* Lenovo Command Station is the initial admin allowlist device; ROG Mobile Command is planned for equivalent access after validation.
+* Lenovo Command Station is the initial admin allowlist device; ROG Mobile Command has verified GitHub and SSH access.
 
 ---
 
@@ -156,7 +156,7 @@ The printer should only be reachable from devices that need to print.
 * Identify the smart litter box network identity if required for firewall rules.
 * Decide whether Galaxy S25+ should receive limited trusted/admin access.
 * Plan DHCP migration away from reliance on Spectrum router reservations.
-* Build firewall allowlists from trust groups before enabling UFW.
+* Review existing `iptables`/`ip6tables` allowlists against trust groups; validate changes before persisting them.
 * Update RN Grafana dashboard panels for RN Pi-hole and RN NAS metrics.
 * Mirror lightweight discovery tools to redundant-net after the workflow is documented and validated.
 * Capture uptime/status screenshots before planned reboot or kernel maintenance.

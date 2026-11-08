@@ -10,6 +10,19 @@ Entries describe completed work and historical results.
 Private network settings, authentication details,
 and operational configuration remain excluded.
 
+## Early November 2026 - Grafana-to-Prometheus Recovery
+
+Restored Grafana connectivity to host-level Prometheus on both infrastructure nodes.
+
+- Identified Docker-to-host IPv4 firewall restrictions.
+- Applied targeted firewall exceptions.
+- Verified HTTP 200 responses and restored dashboard data.
+- Saved and validated persistent firewall configuration.
+
+Result: Connectivity restored on both nodes.
+
+Related documentation: [Grafana Recovery](grafana-prometheus-recovery-2026-11.md)
+
 ## October 31, 2026 - Crash-Kernel Memory Recovery
 
 ### Issue
