@@ -76,15 +76,13 @@ their sanitized documentation is committed.
 Public documentation must not become the storage location
 for private operational secrets or connection information.
 
-## Previously Published Information
+## Publication Integrity
 
-Removing sensitive information from current files does not
-remove it from Git history, forks, or external caches.
+Documentation and version-control changes must meet the same
+public-content standards as new files.
 
-Previously exposed credentials must be rotated or revoked.
-
-Historical exposure must be reviewed separately before
-considering repository history cleanup.
+Review text, configuration examples, and images before publishing.
+Keep sensitive operational information in private administrative records.
 
 ## Review Standard
 
