@@ -22,7 +22,7 @@ Restored monitoring connectivity for the primary Uptime Kuma instance after fire
 - Confirmed HTTP 302 from Kuma's web endpoint and healthy container status.
 - Confirmed the primary Uptime Kuma dashboard returned to 13 UP / 0 DOWN.
 
-Remaining follow-up: the secondary Uptime Kuma instance separately showed 8 UP / 5 DOWN and requires investigation. Post-reboot firewall persistence has not yet been retested.
+Follow-up completed November 8, 2026: both Uptime Kuma dashboards verified at 13 UP / 0 DOWN. Saved firewall exceptions were inspected on both nodes. Post-reboot persistence has not yet been retested.
 
 Related documentation: [Docker-to-Host Monitoring Recovery](grafana-prometheus-recovery-2026-11.md)
 

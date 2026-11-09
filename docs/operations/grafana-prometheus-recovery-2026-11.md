@@ -123,7 +123,7 @@ Final tests confirmed:
 
 The earlier monitoring failures also stopped appearing in subsequent short log checks.
 
-**Validation limitations:** The exact Uptime Kuma dashboard UP/DOWN count was not confirmed because dashboard authentication was unavailable. Saved firewall rules were inspected, but restoration after an actual reboot was not tested.
+**Follow-up validation (November 8, 2026):** Both Uptime Kuma dashboards confirmed 13 UP / 0 DOWN. Saved firewall exceptions were inspected on both nodes. Restoration after an actual reboot has not been tested.
 
 **Result:** The identified monitoring connectivity failures were corrected, with successful final connectivity tests.
 
