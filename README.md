@@ -217,7 +217,7 @@ The goal is not only to deploy services, but to build, validate, document, monit
 
 A validated recovery on both infrastructure nodes restored Grafana connectivity to host-level Prometheus through targeted Docker-to-host firewall corrections.
 
-[Grafana-to-Prometheus Recovery](docs/operations/grafana-prometheus-recovery-2026-11.md)
+[Docker-to-Host Monitoring Recovery](docs/operations/grafana-prometheus-recovery-2026-11.md)
 
 ## Repository Security Audit
 

@@ -76,7 +76,7 @@ Primary infrastructure node providing:
 * Pi-hole
 * Unbound
 * Samba NAS
-* hub-share (1 TB storage)
+* HubNAS (1 TB storage)
 * Glances
 * Uptime Kuma
 

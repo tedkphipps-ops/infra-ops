@@ -10,6 +10,22 @@ Entries describe completed work and historical results.
 Private network settings, authentication details,
 and operational configuration remain excluded.
 
+## November 8, 2026 - Uptime Kuma Firewall Recovery
+
+Restored monitoring connectivity for the primary Uptime Kuma instance after firewall filtering blocked required Docker-to-host traffic.
+
+- Identified missing container-to-host firewall permissions.
+- Applied narrowly scoped TCP and ICMP exceptions on the primary node.
+- Allowed required ICMP monitoring traffic on the secondary node.
+- Backed up and saved both firewall configurations.
+- Verified successful pings to both nodes with zero packet loss.
+- Confirmed HTTP 302 from Kuma's web endpoint and healthy container status.
+- Confirmed the primary Uptime Kuma dashboard returned to 13 UP / 0 DOWN.
+
+Remaining follow-up: the secondary Uptime Kuma instance separately showed 8 UP / 5 DOWN and requires investigation. Post-reboot firewall persistence has not yet been retested.
+
+Related documentation: [Docker-to-Host Monitoring Recovery](grafana-prometheus-recovery-2026-11.md)
+
 ## Early November 2026 - Grafana-to-Prometheus Recovery
 
 Restored Grafana connectivity to host-level Prometheus on both infrastructure nodes.

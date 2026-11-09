@@ -167,7 +167,7 @@ and persistent firewall configuration.
 See [RN Pi-hole Exporter Recovery](../operations/rn-exporter-recovery-2026-10-31.md)
 for the documented incident, corrective action, and validation.
 
-The separate [Grafana-to-Prometheus Recovery](../operations/grafana-prometheus-recovery-2026-11.md) documents restored monitoring connectivity on both infrastructure nodes.
+The separate [Docker-to-Host Monitoring Recovery](../operations/grafana-prometheus-recovery-2026-11.md) documents restored monitoring connectivity on both infrastructure nodes.
 
 Sensitive connection details remain private.
 

@@ -19,7 +19,7 @@ Primary responsibilities include:
 * DNS redundancy
 * Recursive DNS resolution
 * Infrastructure monitoring
-* Backup NAS services
+* Secondary NAS services
 * Log aggregation support
 * Metrics collection
 * Service continuity
@@ -59,13 +59,13 @@ The node operates alongside `infra-hub` to provide redundancy and infrastructure
 ### Storage Services
 
 * Samba NAS
-* Backup NAS Storage
+* Secondary NAS Storage
 
 ---
 
-## Backup NAS Infrastructure
+## Secondary NAS Infrastructure
 
-`redundant-net` hosts the secondary NAS platform used for backup storage and redundancy purposes.
+`redundant-net` provides an independent NAS storage volume, separate from the primary NAS.
 
 Current storage configuration:
 
@@ -74,9 +74,9 @@ Current storage configuration:
 | Mount Path | `/mnt/rn-nas`                              |
 | Filesystem | NTFS3                                      |
 | Capacity   | Approximately 3 TB                         |
-| Purpose    | Backup Storage & Infrastructure Redundancy |
+| Purpose    | Independent Secondary Storage              |
 
-The backup NAS supports future disaster recovery planning and infrastructure data preservation.
+Automated backup synchronization and disaster recovery remain future work.
 
 ---
 
