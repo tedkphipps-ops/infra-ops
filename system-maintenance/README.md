@@ -56,7 +56,7 @@ Expected services include:
 - Loki
 - Promtail
 - Pi-hole Exporter
-- Uptime Kuma (infra-hub)
+- Uptime Kuma (infra-hub and redundant-net)
 
 ---
 
@@ -320,12 +320,12 @@ chronyc tracking
 
 ---
 
-# Current Production Baseline
+# Documented Service Baseline and Verified Kernels
 
-Current production baseline:
+Service and storage entries below are documented operating expectations, not a live health check:
 
 - Ubuntu 26.04 LTS
-- Linux kernel 7.0.0-27
+- Running kernel on HUB and RN: 7.0.0-38-generic (verified 2026-11-08)
 - Docker healthy
 - Pi-hole operational
 - Unbound operational

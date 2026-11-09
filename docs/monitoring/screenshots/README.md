@@ -4,7 +4,7 @@ This directory contains dashboard screenshots and visual monitoring references f
 
 ## Contents
 
-### uptime-kuma-status-page.png
+### uptime-kuma-dashboard.png
 
 Infrastructure status page overview showing service availability across monitored hosts, DNS services, monitoring services, and storage resources.
 

@@ -2,253 +2,241 @@
 
 ## Overview
 
-This module documents the deployment, configuration, and operational integration of Samba-based Network Attached Storage (NAS) services within the `infra-ops` infrastructure environment.
+This module documents the Samba-based network-attached storage services deployed across the infra-ops homelab.
 
-The Samba NAS platform provides centralized file sharing, persistent infrastructure storage, network-accessible data management, and storage redundancy support across the homelab ecosystem.
+Two Linux infrastructure nodes provide independently accessible NAS storage:
 
-Storage services currently operate across both infrastructure nodes:
+- `infra-hub` — primary NAS services
+- `redundant-net` — secondary NAS services
 
-* `infra-hub` – Primary NAS Services
-* `redundant-net` – Backup NAS Services
+Samba provides network file sharing, while Linux manages the underlying storage mounts and filesystems.
 
-Together these systems provide storage availability, operational persistence, infrastructure data management, and future backup capabilities.
-
----
-
-## Infrastructure Role
-
-The Samba NAS platform functions as the storage layer within the `infra-ops` environment.
-
-Primary responsibilities include:
-
-* Network file sharing
-* Persistent infrastructure storage
-* Shared operational data access
-* Centralized file management
-* Cross-device storage accessibility
-* Backup storage services
-* Future disaster recovery support
-* Infrastructure data retention
-
-The NAS platform serves as a foundational component supporting infrastructure operations, monitoring, documentation, backups, and long-term scalability.
+The two-node design provides separate storage resources. It does not, by itself, establish automated file replication or backup synchronization.
 
 ---
 
 ## Infrastructure Architecture
 
-| Node            | Role                 | Storage Mount  |
-| --------------- | -------------------- | -------------- |
-| `infra-hub`     | Primary NAS Services | `/mnt/hub-nas` |
-| `redundant-net` | Backup NAS Services  | `/mnt/rn-nas`  |
+| Node | Storage Role | Mount Point | Approximate Capacity |
+| --- | --- | --- | --- |
+| `infra-hub` | Primary NAS | `/mnt/hub-nas` | 1 TB |
+| `redundant-net` | Secondary NAS | `/mnt/rn-nas` | 3 TB |
 
-Current storage deployment:
+Both nodes use the NTFS3 filesystem driver for their NAS volumes.
 
-* HUB NAS Capacity: ~1 TB
-* RN NAS Capacity: ~3 TB
-* NTFS3 storage driver standardized across both systems
-* Samba services available through both infrastructure nodes
+Samba provides the network-sharing layer above these mounted filesystems.
 
 ---
 
-## Deployment Objectives
+## Infrastructure Role
 
-* Deploy centralized network storage services
-* Enable secure file sharing across infrastructure devices
-* Maintain persistent storage availability
-* Support operational data accessibility
-* Improve infrastructure storage organization
-* Establish backup storage capabilities
-* Prepare for future disaster recovery workflows
-* Support long-term infrastructure scalability
+The NAS services support:
 
----
+- Network-accessible file storage
+- Shared file management
+- Persistent storage across host reboots
+- Access from authorized infrastructure clients
+- Storage capacity and health monitoring
+- Independent primary and secondary storage locations
 
-## Samba Installation & Configuration
-
-### Install Samba Services
-
-Update system packages and install Samba:
-
-```bash
-sudo apt update && sudo apt install samba -y
-```
+File replication, automated backups, and disaster recovery require separate implementation and validation. The presence of a secondary NAS is not proof that the primary NAS data has been backed up.
 
 ---
 
-### Create Shared Storage Directory
+## Samba Installation
 
-Create the shared storage directory structure:
-
-```bash
-sudo mkdir -p /srv/samba/shared
-```
-
-Assign appropriate ownership and permissions:
+Install the Samba service on an Ubuntu host:
 
 ```bash
-sudo chown nobody:nogroup /srv/samba/shared
-sudo chmod 0775 /srv/samba/shared
+sudo apt update
+sudo apt install samba
 ```
+
+Samba is managed through the `smbd` systemd service.
+
+The production NAS volumes are mounted under `/mnt`; they are not created using a separate `/srv/samba/shared` directory.
 
 ---
 
-### Samba Configuration
+## Share Configuration
 
-Edit the Samba configuration file:
+Samba share definitions are maintained in:
 
-```bash
-sudo nano /etc/samba/smb.conf
+```text
+/etc/samba/smb.conf
 ```
 
-Example share configuration:
+The production configurations were inspected using `testparm -s` on November 8, 2026.
+
+The validated share mappings are:
+
+| Node | Share Name | Filesystem Path |
+| --- | --- | --- |
+| `infra-hub` | `HubNAS` | `/mnt/hub-nas` |
+| `redundant-net` | `backup-share` | `/mnt/rn-nas` |
+
+Both shares were configured for read/write access at the Samba configuration level.
+
+### Access Control
+
+Guest-enabled file sharing is not the recommended deployment pattern for infrastructure storage.
+
+Share access depends on Samba authentication, filesystem permissions, and the applicable share restrictions.
+
+An authenticated share example is shown below for illustration. It is not a copy of either production configuration:
 
 ```ini
-[Shared]
-path = /srv/samba/shared
+[NASShare]
+path = /mnt/your-nas-volume
 browseable = yes
 read only = no
-guest ok = yes
-create mask = 0775
-directory mask = 0775
+guest ok = no
+valid users = your-authorized-samba-account
 ```
+
+Replace the illustrative path and account with configured local values before using such a share definition.
+
+Do not assume that changing `smb.conf` alone establishes correct underlying filesystem access.
+
+Validate ownership, permissions, Samba user provisioning, and client authentication before enabling a new share.
 
 ---
 
-## Service Initialization
+## Service Management
 
-Restart and enable Samba services:
-
-```bash
-sudo systemctl restart smbd
-sudo systemctl enable smbd
-```
-
----
-
-## Validation & Testing
-
-The following validation procedures were performed:
-
-* Verified Samba configuration syntax
-* Confirmed network share accessibility
-* Tested Linux client connectivity
-* Validated file read/write operations
-* Confirmed persistent share availability after reboot
-* Verified service startup behavior
-* Confirmed successful network discovery
-* Verified NAS mount accessibility
-* Confirmed storage visibility through monitoring platforms
-
-Validate Samba configuration:
+Check whether Samba is active:
 
 ```bash
-testparm
+systemctl is-active smbd
 ```
 
-Verify Samba service status:
+Inspect service details:
 
 ```bash
 systemctl status smbd
 ```
 
-Verify mounted storage:
+Validate the Samba configuration:
+
+```bash
+testparm -s
+```
+
+Changes to Samba configuration should be backed up, syntax-checked, and tested before restarting the service.
+
+---
+
+## Storage Validation
+
+Confirm the relevant NAS filesystem is mounted:
+
+```bash
+findmnt /mnt/hub-nas
+```
+
+On the secondary node:
+
+```bash
+findmnt /mnt/rn-nas
+```
+
+Review storage capacity:
 
 ```bash
 df -h
 ```
 
+Inspect filesystem information:
+
+```bash
+lsblk -f
+```
+
+Successful mounting and an active Samba service are necessary checks, but actual share accessibility and read/write operations must also be tested from an authorized client.
+
 ---
 
-## Monitoring & Visibility
+## Monitoring and Observability
 
-NAS services are monitored through:
+NAS storage and service health are integrated into the homelab monitoring environment.
 
-* Grafana dashboards
-* Prometheus
-* Node Exporter
-* Glances
-* Uptime Kuma
+Tools include:
 
-Current monitoring includes:
+- Grafana
+- Prometheus
+- Node Exporter
+- Glances
+- Uptime Kuma
 
-* NAS capacity utilization
-* Used storage
-* Free storage
-* NAS service status
-* Disk health status
-* Drive temperature monitoring
+Monitoring provides visibility into relevant storage and host metrics, including capacity, disk usage, service status, and available drive-health information.
 
-Monitoring screenshots are maintained within:
+Dashboard screenshots are maintained in:
 
 ```text
 docs/monitoring/screenshots/
 ```
 
+Monitoring documentation is maintained in:
+
+```text
+docs/monitoring/README.md
+```
+
 ---
 
-## Operational Troubleshooting
+## Operational Recovery
 
 ### NAS Mount Standardization
 
-Infrastructure storage paths were standardized to improve consistency and documentation alignment.
+Storage mount paths were standardized across the two infrastructure nodes:
 
-Current standards:
+- `/mnt/hub-nas`
+- `/mnt/rn-nas`
 
-* `/mnt/hub-nas`
-* `/mnt/rn-nas`
+This improved consistency across service configuration, monitoring, maintenance, and documentation.
 
-This standardization simplified monitoring, documentation, dashboard management, and future infrastructure growth.
+### Secondary NAS Filesystem Recovery
 
----
+On October 25, 2026, the secondary NAS experienced an NTFS filesystem dirty-flag condition that interfered with normal mounting.
 
-### Storage Monitoring Integration
+Recovery included:
 
-NAS visibility was expanded through integration with Node Exporter, Prometheus, and Grafana.
+- Investigating the filesystem condition
+- Clearing the dirty flag
+- Removing the temporary forced-mount configuration
+- Restoring normal NTFS3 mounting
+- Validating read/write access
+- Confirming Samba availability
 
-This deployment enabled:
+The incident and its verified recovery are documented separately:
 
-* Capacity monitoring
-* Utilization tracking
-* Health monitoring
-* Storage observability across both infrastructure nodes
-
----
-
-## Infrastructure Integration
-
-The Samba NAS platform integrates with additional infrastructure modules throughout the `infra-ops` ecosystem:
-
-* `pihole-setup`
-* `unbound`
-* `glances-monitoring`
-* `monitoring`
-* `redundant-net`
-
-The NAS platform supports infrastructure persistence, documentation storage, monitoring data retention, backup workflows, and future disaster recovery objectives.
+[RN NAS Filesystem Recovery](../docs/operations/rn-nas-recovery-2026-10-25.md)
 
 ---
 
-## Future Improvements
+## Operational Principles
 
-Planned future enhancements include:
+NAS maintenance follows these practices:
 
-* Automated backup workflows
-* Cross-node backup synchronization
-* Disaster recovery testing
-* Expanded storage capacity
-* Future RAID research and evaluation
-* Additional storage monitoring
-* Long-term backup retention policies
-* Infrastructure storage analytics
+1. Verify the physical storage device and filesystem.
+2. Confirm the correct mount point.
+3. Validate Samba configuration syntax.
+4. Confirm the Samba service is running.
+5. Test share access from an authorized client.
+6. Verify filesystem read/write behavior.
+7. Check storage and service monitoring.
+8. Document validated production changes.
+
+Sensitive account information and private network details are excluded from public documentation.
 
 ---
 
-## Operational Notes
+## Summary
 
-The implementation of Samba NAS services introduced centralized storage capabilities into the homelab environment and established the foundation for infrastructure persistence and backup operations.
+The infra-ops homelab operates Samba NAS services on both primary and secondary Linux infrastructure nodes.
 
-The storage platform evolved from a single-node file share into a dual-node NAS architecture supporting both primary and backup storage services.
+The deployment includes separate NTFS3-backed storage volumes, network file sharing, systemd service management, and integrated monitoring.
 
-A major operational milestone included NAS mount standardization across infrastructure nodes, migration to NTFS3 storage drivers, and integration with the centralized monitoring stack.
+Documented recovery work demonstrates troubleshooting of filesystem mount conditions, service availability, and storage accessibility.
 
-The Samba NAS platform remains a core infrastructure service supporting operational continuity, documentation management, monitoring visibility, and future disaster recovery planning across the homelab ecosystem.
+These are independently operated NAS services; automatic replication or backup synchronization is not claimed.
