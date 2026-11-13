@@ -1,0 +1,32 @@
+---
+- name: Check Ubuntu updates and reboot requirements
+  hosts: homelab
+  gather_facts: true
+  become: false
+
+  tasks:
+    - name: List available package updates
+      ansible.builtin.command: apt list --upgradable
+      register: available_updates
+      changed_when: false
+
+    - name: Check whether a reboot is required
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_check
+
+    - name: Check held packages
+      ansible.builtin.command: apt-mark showhold
+      register: held_packages
+      changed_when: false
+
+    - name: Display update report
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ ansible_facts['hostname'] }}"
+          - "Ubuntu: {{ ansible_facts['distribution_version'] }}"
+          - "Running kernel: {{ ansible_facts['kernel'] }}"
+          - "Reboot required: {{ reboot_check.stat.exists }}"
+          - "Available updates: {{ available_updates.stdout_lines | reject('equalto', 'Listing...') | list | length }}"
+          - "Package list: {{ available_updates.stdout_lines }}"
+          - "Held packages: {{ held_packages.stdout_lines }}"
