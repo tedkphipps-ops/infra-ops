@@ -1,0 +1,55 @@
+---
+- name: Verify critical services after a server reboot
+  hosts: homelab
+  gather_facts: true
+  become: false
+
+  vars:
+    critical_services:
+      - pihole-FTL
+      - unbound
+      - smbd
+      - docker
+    nas_mount: "{{ '/mnt/hub-nas' if inventory_hostname == 'infra-hub' else '/mnt/rn-nas' }}"
+
+  tasks:
+    - name: Verify critical systemd services are active
+      ansible.builtin.command:
+        argv:
+          - systemctl
+          - is-active
+          - "{{ item }}"
+      loop: "{{ critical_services }}"
+      register: service_checks
+      changed_when: false
+
+    - name: Verify NAS storage is mounted
+      ansible.builtin.command:
+        argv:
+          - mountpoint
+          - -q
+          - "{{ nas_mount }}"
+      changed_when: false
+
+    - name: Verify Uptime Kuma responds
+      ansible.builtin.uri:
+        url: http://127.0.0.1:3001/
+        status_code: [200, 302]
+        timeout: 10
+
+    - name: Verify Grafana responds
+      ansible.builtin.uri:
+        url: http://127.0.0.1:3000/login
+        status_code: [200, 302]
+        timeout: 10
+
+    - name: Report successful validation
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "Running kernel: {{ ansible_facts['kernel'] }}"
+          - "Critical services: ACTIVE"
+          - "NAS mount: {{ nas_mount }} MOUNTED"
+          - "Uptime Kuma: RESPONDING"
+          - "Grafana: RESPONDING"
+          - "Post-reboot validation: PASSED"
